@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор QR-кодов</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f0f0;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .controls {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 999;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: #007bff;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-purple {
+            background: #6f42c1;
+        }
+
+        .btn-purple:hover {
+            background: #5a32a3;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .content {
+            margin-top: 140px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .section {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h2 .badge {
+            background: #28a745;
+            color: white;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 10px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #28a745;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8fff8;
+        }
+
+        .upload-zone:hover {
+            background: #e8f5e9;
+            border-color: #20c997;
+        }
+
+        .upload-zone.dragover {
+            background: #d4edda;
+            border-color: #20c997;
+            transform: scale(1.02);
+        }
+
+        .upload-zone p {
+            color: #666;
+            margin: 10px 0;
+        }
+
+        .upload-zone .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .manual-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #28a745;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: monospace;
+        }
+
+        .form-group .hint {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .files-list {
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .file-item .file-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .file-item .file-count {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .file-item .remove-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+        }
+
+        .file-item .remove-btn:hover {
+            color: #a71d2a;
+        }
+
+        .codes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .code-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .code-item:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .code-item.selected {
+            background: #d4edda;
+            border: 2px solid #28a745;
+        }
+
+        .code-checkbox {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #28a745;
+        }
+
+        .code-number {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .code-remove {
+            position: absolute;
+            top: 8px;
+            right: 35px;
+            font-size: 14px;
+            color: #dc3545;
+            cursor: pointer;
+            background: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .code-remove:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .qr-wrapper {
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 8px 0;
+        }
+
+        .qr-wrapper img {
+            display: block;
+            width: 120px;
+            height: 120px;
+        }
+
+        .code-name {
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .code-data {
+            font-size: 9px;
+            color: #999;
+            word-break: break-all;
+            text-align: center;
+            max-width: 160px;
+            margin-top: 4px;
+            background: #f8f9fa;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+
+        .code-source {
+            font-size: 9px;
+            color: #6f42c1;
+            margin-top: 4px;
+        }
+
+        .selection-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .selected-count {
+            font-weight: bold;
+            color: #28a745;
+            padding: 8px 15px;
+            background: white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #28a745;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress {
+            width: 100%;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .progress.active {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+        }
+
+        .tab.active {
+            background: #28a745;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Генератор QR-кодов</h1>
+        <div class="stats">
+            <div class="stat-item">
+                <div>Всего: <span class="stat-value" id="totalCount">0</span></div>
+            </div>
+            <div class="stat-item">
+                <div>Выбрано: <span class="stat-value" id="selectedCount">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-primary" id="exportBtn" onclick="exportToPDF()" disabled>
+            Экспорт в PDF
+        </button>
+        <button class="btn btn-warning" onclick="selectAll()">[+] Выбрать все</button>
+        <button class="btn" onclick="deselectAll()">[-] Снять все</button>
+        <button class="btn btn-danger" onclick="clearAll()">Очистить</button>
+    </div>
+
+    <div class="content">
+        <div class="section">
+            <h2>Добавить QR-коды</h2>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('csv')">Из CSV файлов</button>
+                <button class="tab" onclick="switchTab('manual')">Ручной ввод</button>
+                <button class="tab" onclick="switchTab('bulk')">Массовый ввод</button>
+            </div>
+
+            <div class="tab-content active" id="tab-csv">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="icon">[CSV]</div>
+                    <p><strong>Перетащите CSV файлы сюда</strong></p>
+                    <p>или нажмите для выбора</p>
+                    <p style="font-size: 12px; color: #999; margin-top: 15px;">
+                        Можно выбрать несколько файлов. Название берется из имени файла.
+                    </p>
+                </div>
+                <input type="file" id="fileInput" accept=".csv,.txt" multiple>
+                
+                <div class="files-list" id="filesList"></div>
+            </div>
+
+            <div class="tab-content" id="tab-manual">
+                <div class="manual-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="manualCode">Криптокод (данные для QR)</label>
+                            <input type="text" id="manualCode" placeholder="0104589794982915215*:?nymuh!SNM">
+                            <span class="hint">Текст, который будет закодирован в QR-код</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="manualName">Название</label>
+                            <input type="text" id="manualName" placeholder="Название товара">
+                            <span class="hint">Текст под QR-кодом на этикетке</span>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn" onclick="addManualCode()">[+] Добавить</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-bulk">
+                <div class="manual-form">
+                    <div class="form-group">
+                        <label for="bulkName">Общее название для всех кодов</label>
+                        <input type="text" id="bulkName" placeholder="Название товара">
+                    </div>
+                    <div class="form-group">
+                        <label for="bulkCodes">Криптокоды (каждый с новой строки)</label>
+                        <textarea id="bulkCodes" placeholder="0104589794982915215*:?nymuh!SNM
+0104589794982915215*:?abcde!XYZ
+0104589794982915215*:?qwert!ABC"></textarea>
+                        <span class="hint">Каждая строка - отдельный QR-код. Пустые строки игнорируются.</span>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-purple" onclick="addBulkCodes()">[+] Добавить все</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div id="loadingText">Генерация QR-кодов...</div>
+        </div>
+        <div class="progress" id="progress">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+
+        <div class="section" id="codesSection" style="display: none;">
+            <h2>
+                QR-коды 
+                <span class="badge" id="codesCountBadge">0</span>
+            </h2>
+            
+            <div class="selection-controls">
+                <span class="selected-count">Выбрано: <span id="selectedCountInline">0</span></span>
+                <button class="btn" onclick="selectAll()">[+] Все</button>
+                <button class="btn btn-warning" onclick="deselectAll()">[-] Снять</button>
+                <button class="btn btn-primary" onclick="exportToPDF()">PDF</button>
+            </div>
+
+            <div class="codes-grid" id="codesGrid"></div>
+            
+            <div class="empty-state" id="emptyState">
+                <div class="icon">[ ]</div>
+                <p>Пока нет QR-кодов</p>
+                <p style="font-size: 14px;">Загрузите CSV или добавьте вручную</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allCodes = [];
+        let selectedCodes = new Set();
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const codesGrid = document.getElementById('codesGrid');
+
+        // Горячие клавиши
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'a' && allCodes.length > 0) {
+                e.preventDefault();
+                selectAll();
+            }
+            if (e.ctrlKey && e.key === 'd' && allCodes.length > 0) {
+                e.preventDefault();
+                deselectAll();
+            }
+            if (e.key === 'Enter' && !e.shiftKey) {
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab.id === 'tab-manual') {
+                    e.preventDefault();
+                    addManualCode();
+                }
+            }
+        });
+
+        // Табы
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector('.tab-content#tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Drag & Drop
+        uploadZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', function() {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        uploadZone.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            handleFiles(e.target.files);
+        });
+
+        function cleanFileName(fileName) {
+            var name = fileName.replace(/\.(csv|txt)$/i, '');
+            name = name.replace(/_gtin.*$/i, '');
+            return name.trim();
+        }
+
+        async function handleFiles(files) {
+            var fileArray = Array.from(files).filter(function(f) {
+                return f.name.toLowerCase().endsWith('.csv') || 
+                       f.name.toLowerCase().endsWith('.txt');
+            });
+
+            if (fileArray.length === 0) {
+                alert('Ошибка: Выберите CSV или TXT файлы!');
+                return;
+            }
+
+            showLoading(true);
+
+            var totalLines = 0;
+            var processedLines = 0;
+
+            for (var i = 0; i < fileArray.length; i++) {
+                var text = await fileArray[i].text();
+                var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+                totalLines += lines.length;
+            }
+
+            for (var i = 0; i < fileArray.length; i++) {
+                var file = fileArray[i];
+                var fileName = file.name;
+                var productName = cleanFileName(fileName);
+
+                var text = await file.text();
+                var lines = text.split(/\r?\n/)
+                    .map(function(line) { return line.trim(); })
+                    .filter(function(line) { return line.length > 0; });
+
+                for (var j = 0; j < lines.length; j++) {
+                    processedLines++;
+                    updateProgress((processedLines / totalLines) * 100, 
+                        processedLines + '/' + totalLines + ': ' + productName);
+
+                    var qrData = await generateQRCode(lines[j]);
+                    
+                    allCodes.push({
+                        data: lines[j],
+                        name: productName,
+                        qrDataUrl: qrData,
+                        source: 'csv',
+                        fileName: fileName
+                    });
+
+                    if (j % 5 === 0) {
+                        await new Promise(function(resolve) { setTimeout(resolve, 10); });
+                    }
+                }
+
+                addFileToList(fileName, lines.length);
+            }
+
+            showLoading(false);
+            displayCodes();
+            updateStats();
+            fileInput.value = '';
+        }
+
+        function addFileToList(fileName, count) {
+            var list = document.getElementById('filesList');
+            var item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = '<span class="file-name">' + fileName + '</span>' +
+                '<span class="file-count">' + count + ' кодов</span>';
+            list.appendChild(item);
+        }
+
+        async function addManualCode() {
+            var codeInput = document.getElementById('manualCode');
+            var nameInput = document.getElementById('manualName');
+
+            var code = codeInput.value.trim();
+            var name = nameInput.value.trim();
+
+            if (!code) {
+                alert('Внимание: Введите криптокод!');
+                codeInput.focus();
+                return;
+            }
+
+            if (!name) {
+                alert('Внимание: Введите название!');
+                nameInput.focus();
+                return;
+            }
+
+            showLoading(true);
+            updateProgress(50, 'Генерация QR-кода...');
+
+            var qrData = await generateQRCode(code);
+
+            allCodes.push({
+                data: code,
+                name: name,
+                qrDataUrl: qrData,
+                source: 'manual'
+            });
+
+            showLoading(false);
+            displayCodes();
+            updateStats();
+
+            codeInput.value = '';
+            codeInput.focus();
+        }
+
+        async function addBulkCodes() {
+            var nameInput = document.getElementById('bulkName');
+            var codesInput = document.getElementById('bulkCodes');
+
+            var name = nameInput.value.trim();
+            var codesText = codesInput.value.trim();
+
+            if (!name) {
+                alert('Внимание: Введите название!');
+                nameInput.focus();
+                return;
+            }
+
+            if (!codesText) {
+                alert('Внимание: Введите криптокоды!');
+                codesInput.focus();
+                return;
+            }
+
+            var lines = codesText.split(/\r?\n/)
+                .map(function(l) { return l.trim(); })
+                .filter(function(l) { return l.length > 0; });
+
+            if (lines.length === 0) {
+                alert('Внимание: Не найдено ни одного кода!');
+                return;
+            }
+
+            showLoading(true);
+
+            for (var i = 0; i < lines.length; i++) {
+                updateProgress(((i + 1) / lines.length) * 100, 
+                    (i + 1) + '/' + lines.length + ': Генерация...');
+
+                var qrData = await generateQRCode(lines[i]);
+
+                allCodes.push({
+                    data: lines[i],
+                    name: name,
+                    qrDataUrl: qrData,
+                    source: 'bulk'
+                });
+
+                if (i % 5 === 0) {
+                    await new Promise(function(resolve) { setTimeout(resolve, 10); });
+                }
+            }
+
+            showLoading(false);
+            displayCodes();
+            updateStats();
+
+            codesInput.value = '';
+            
+            alert('Готово! Добавлено ' + lines.length + ' QR-кодов');
+        }
+
+        function generateQRCode(data) {
+            return new Promise(function(resolve) {
+                var tempDiv = document.createElement('div');
+                tempDiv.style.position = 'absolute';
+                tempDiv.style.left = '-9999px';
+                document.body.appendChild(tempDiv);
+
+                try {
+                    new QRCode(tempDiv, {
+                        text: data,
+                        width: 256,
+                        height: 256,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+
+                    setTimeout(function() {
+                        var canvas = tempDiv.querySelector('canvas');
+                        if (canvas) {
+                            resolve(canvas.toDataURL('image/png'));
+                        } else {
+                            var img = tempDiv.querySelector('img');
+                            resolve(img ? img.src : null);
+                        }
+                        document.body.removeChild(tempDiv);
+                    }, 50);
+
+                } catch (error) {
+                    console.error('Ошибка генерации QR:', error);
+                    document.body.removeChild(tempDiv);
+                    resolve(null);
+                }
+            });
+        }
+
+        function displayCodes() {
+            var container = document.getElementById('codesSection');
+            var emptyState = document.getElementById('emptyState');
+            
+            container.style.display = 'block';
+            codesGrid.innerHTML = '';
+
+            if (allCodes.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            for (var index = 0; index < allCodes.length; index++) {
+                var code = allCodes[index];
+                
+                var codeItem = document.createElement('div');
+                codeItem.className = 'code-item';
+                if (selectedCodes.has(index)) {
+                    codeItem.classList.add('selected');
+                }
+                codeItem.dataset.index = index;
+
+                (function(idx) {
+                    codeItem.addEventListener('click', function(e) {
+                        if (e.target.type !== 'checkbox' && !e.target.classList.contains('code-remove')) {
+                            toggleSelection(idx);
+                        }
+                    });
+                })(index);
+
+                // Чекбокс
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'code-checkbox';
+                checkbox.checked = selectedCodes.has(index);
+                (function(idx) {
+                    checkbox.addEventListener('change', function(e) {
+                        e.stopPropagation();
+                        toggleSelection(idx);
+                    });
+                })(index);
+                codeItem.appendChild(checkbox);
+
+                // Кнопка удаления
+                var removeBtn = document.createElement('button');
+                removeBtn.className = 'code-remove';
+                removeBtn.innerHTML = 'X';
+                removeBtn.title = 'Удалить';
+                (function(idx) {
+                    removeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        removeCode(idx);
+                    });
+                })(index);
+                codeItem.appendChild(removeBtn);
+
+                // Номер
+                var codeNumber = document.createElement('div');
+                codeNumber.className = 'code-number';
+                codeNumber.textContent = '#' + (index + 1);
+                codeItem.appendChild(codeNumber);
+
+                // QR-код
+                var qrWrapper = document.createElement('div');
+                qrWrapper.className = 'qr-wrapper';
+                
+                if (code.qrDataUrl) {
+                    var img = document.createElement('img');
+                    img.src = code.qrDataUrl;
+                    qrWrapper.appendChild(img);
+                } else {
+                    qrWrapper.innerHTML = '<div style="color: red; padding: 20px;">Ошибка</div>';
+                }
+                codeItem.appendChild(qrWrapper);
+
+                // Название
+                var codeName = document.createElement('div');
+                codeName.className = 'code-name';
+                codeName.textContent = code.name;
+                codeName.title = code.name;
+                codeItem.appendChild(codeName);
+
+                // Данные
+                var codeData = document.createElement('div');
+                codeData.className = 'code-data';
+                codeData.textContent = code.data.length > 30 ? code.data.slice(0, 30) + '...' : code.data;
+                codeData.title = code.data;
+                codeItem.appendChild(codeData);
+
+                // Источник
+                var sourceLabels = { csv: 'CSV', manual: 'Вручную', bulk: 'Массовый' };
+                var codeSource = document.createElement('div');
+                codeSource.className = 'code-source';
+                codeSource.textContent = '[' + (sourceLabels[code.source] || code.source) + ']';
+                codeItem.appendChild(codeSource);
+
+                codesGrid.appendChild(codeItem);
+            }
+
+            document.getElementById('codesCountBadge').textContent = allCodes.length;
+        }
+
+        function removeCode(index) {
+            allCodes.splice(index, 1);
+            
+            var newSelected = new Set();
+            selectedCodes.forEach(function(i) {
+                if (i < index) newSelected.add(i);
+                else if (i > index) newSelected.add(i - 1);
+            });
+            selectedCodes = newSelected;
+
+            displayCodes();
+            updateStats();
+        }
+
+        function toggleSelection(index) {
+            if (selectedCodes.has(index)) {
+                selectedCodes.delete(index);
+            } else {
+                selectedCodes.add(index);
+            }
+            
+            var codeItem = document.querySelector('.code-item[data-index="' + index + '"]');
+            var checkbox = codeItem.querySelector('.code-checkbox');
+            
+            if (selectedCodes.has(index)) {
+                codeItem.classList.add('selected');
+            } else {
+                codeItem.classList.remove('selected');
+            }
+            checkbox.checked = selectedCodes.has(index);
+            
+            updateStats();
+        }
+
+        function selectAll() {
+            for (var i = 0; i < allCodes.length; i++) {
+                selectedCodes.add(i);
+            }
+            var items = document.querySelectorAll('.code-item');
+            for (var j = 0; j < items.length; j++) {
+                items[j].classList.add('selected');
+                items[j].querySelector('.code-checkbox').checked = true;
+            }
+            updateStats();
+        }
+
+        function deselectAll() {
+            selectedCodes.clear();
+            var items = document.querySelectorAll('.code-item');
+            for (var j = 0; j < items.length; j++) {
+                items[j].classList.remove('selected');
+                items[j].querySelector('.code-checkbox').checked = false;
+            }
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = allCodes.length;
+            document.getElementById('selectedCount').textContent = selectedCodes.size;
+            document.getElementById('selectedCountInline').textContent = selectedCodes.size;
+            document.getElementById('exportBtn').disabled = selectedCodes.size === 0;
+        }
+
+        function showLoading(show) {
+            if (show) {
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('progress').classList.add('active');
+            } else {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('progress').classList.remove('active');
+            }
+        }
+
+        function updateProgress(percent, text) {
+            var progressBar = document.getElementById('progressBar');
+            progressBar.style.width = percent + '%';
+            progressBar.textContent = Math.round(percent) + '%';
+            document.getElementById('loadingText').textContent = text;
+        }
+
+        // ========================================
+        // ЭКСПОРТ В PDF
+        // ========================================
+
+        function createTextImage(text, maxWidthMM, fontSizePt) {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            
+            var scale = 10;
+            var maxWidthPx = maxWidthMM * scale;
+            var fontSizePx = fontSizePt * scale / 3;
+            
+            ctx.font = fontSizePx + 'px Arial, sans-serif';
+            
+            var words = text.split(/[\s\-_]+/);
+            var lines = [];
+            var currentLine = '';
+            
+            for (var i = 0; i < words.length; i++) {
+                var word = words[i];
+                var testLine = currentLine ? currentLine + ' ' + word : word;
+                var metrics = ctx.measureText(testLine);
+                
+                if (metrics.width > maxWidthPx && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            if (currentLine) lines.push(currentLine);
+            
+            var maxLines = 2;
+            if (lines.length > maxLines) {
+                lines.length = maxLines;
+                var lastLine = lines[maxLines - 1];
+                while (ctx.measureText(lastLine + '...').width > maxWidthPx && lastLine.length > 3) {
+                    lastLine = lastLine.slice(0, -1);
+                }
+                lines[maxLines - 1] = lastLine + '...';
+            }
+            
+            var lineHeight = fontSizePx * 1.3;
+            var canvasWidth = maxWidthPx;
+            var canvasHeight = lines.length * lineHeight + fontSizePx * 0.3;
+            
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            
+            ctx.font = fontSizePx + 'px Arial, sans-serif';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            
+            for (var j = 0; j < lines.length; j++) {
+                ctx.fillText(lines[j], canvasWidth / 2, j * lineHeight);
+            }
+            
+            return {
+                dataUrl: canvas.toDataURL('image/png'),
+                width: canvasWidth / scale,
+                height: canvasHeight / scale
+            };
+        }
+
+        async function exportToPDF() {
+            if (selectedCodes.size === 0) {
+                alert('Внимание: Выберите хотя бы один QR-код!\n\nКликните на коды или нажмите "Выбрать все"');
+                return;
+            }
+
+            var exportBtn = document.getElementById('exportBtn');
+            exportBtn.textContent = 'Создание...';
+            exportBtn.disabled = true;
+
+            try {
+                var jsPDF = window.jspdf.jsPDF;
+                
+                var pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                var LABEL_WIDTH = 60;
+                var LABEL_HEIGHT = 40;
+                var COLS = 3;
+                var ROWS = 6;
+                
+                var PAGE_WIDTH = 210;
+                var PAGE_HEIGHT = 297;
+                var startX = (PAGE_WIDTH - COLS * LABEL_WIDTH) / 2;
+                var startY = (PAGE_HEIGHT - ROWS * LABEL_HEIGHT) / 2;
+
+                var PADDING = 2;
+                var TEXT_HEIGHT = 5;
+                var GAP = 1;
+                
+                var qrAreaWidth = LABEL_WIDTH - PADDING * 2;
+                var qrAreaHeight = LABEL_HEIGHT - PADDING * 2 - TEXT_HEIGHT - GAP;
+                var QR_SIZE = Math.min(qrAreaWidth, qrAreaHeight);
+
+                var selectedArray = Array.from(selectedCodes).sort(function(a, b) { return a - b; });
+                var selectedData = selectedArray.map(function(index) { return allCodes[index]; });
+
+                var currentIndex = 0;
+                var pageNum = 0;
+
+                while (currentIndex < selectedData.length) {
+                    if (pageNum > 0) pdf.addPage();
+                    pageNum++;
+
+                    for (var row = 0; row < ROWS && currentIndex < selectedData.length; row++) {
+                        for (var col = 0; col < COLS && currentIndex < selectedData.length; col++) {
+                            var code = selectedData[currentIndex];
+
+                            var labelX = startX + col * LABEL_WIDTH;
+                            var labelY = startY + row * LABEL_HEIGHT;
+
+                            // Рамка
+                            pdf.setDrawColor(180, 180, 180);
+                            pdf.setLineWidth(0.2);
+                            pdf.setLineDashPattern([2, 2], 0);
+                            pdf.rect(labelX, labelY, LABEL_WIDTH, LABEL_HEIGHT);
+                            pdf.setLineDashPattern([], 0);
+
+                            // QR-код
+                            var qrX = labelX + (LABEL_WIDTH - QR_SIZE) / 2;
+                            var qrY = labelY + PADDING;
+
+                            if (code.qrDataUrl) {
+                                try {
+                                    pdf.addImage(code.qrDataUrl, 'PNG', qrX, qrY, QR_SIZE, QR_SIZE);
+                                } catch (e) {
+                                    console.warn('Ошибка QR:', e);
+                                }
+                            }
+
+                            // Текст
+                            var textImg = createTextImage(code.name, LABEL_WIDTH - PADDING * 2, 8);
+                            var textY = labelY + LABEL_HEIGHT - PADDING - TEXT_HEIGHT;
+
+                            try {
+                                pdf.addImage(textImg.dataUrl, 'PNG', 
+                                    labelX + PADDING, textY, 
+                                    LABEL_WIDTH - PADDING * 2, TEXT_HEIGHT);
+                            } catch (e) {
+                                console.warn('Ошибка текста:', e);
+                            }
+
+                            currentIndex++;
+                        }
+                    }
+                }
+
+                var date = new Date().toISOString().slice(0, 10);
+                var time = new Date().toTimeString().slice(0, 5).replace(':', '-');
+                pdf.save('QR_Etiketki_' + date + '_' + time + '.pdf');
+
+                var totalPages = Math.ceil(selectedData.length / (COLS * ROWS));
+                alert('Готово! PDF создан\n\n' +
+                    'Кодов: ' + selectedData.length + '\n' +
+                    'Страниц: ' + totalPages + '\n' +
+                    'Этикетка: ' + LABEL_WIDTH + 'x' + LABEL_HEIGHT + ' мм');
+
+            } catch (error) {
+                console.error('Ошибка PDF:', error);
+                alert('Ошибка создания PDF!\n\n' + error.message);
+            } finally {
+                exportBtn.textContent = 'Экспорт в PDF';
+                exportBtn.disabled = selectedCodes.size === 0;
+            }
+        }
+
+        function clearAll() {
+            if (allCodes.length > 0 && !confirm('Удалить все QR-коды?')) return;
+            
+            allCodes = [];
+            selectedCodes.clear();
+            
+            codesGrid.innerHTML = '';
+            document.getElementById('filesList').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'block';
+            
+            document.getElementById('manualCode').value = '';
+            document.getElementById('manualName').value = '';
+            document.getElementById('bulkCodes').value = '';
+            document.getElementById('bulkName').value = '';
+            
+            updateStats();
+        }
+
+        // Инициализация
+        updateStats();
+    </script>
+</body>
+</html>

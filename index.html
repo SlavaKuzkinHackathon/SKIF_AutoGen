@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKIF AutoGen - Генератор этикеток</title>
+    
+    <!-- Favicon в base64 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iOCIgZmlsbD0iIzI4YTc0NSIvPjxyZWN0IHg9IjgiIHk9IjgiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0id2hpdGUiLz48cmVjdCB4PSIyNCIgeT0iOCIgd2lkdGg9IjgiIGhlaWdodD0iOCIgZmlsbD0id2hpdGUiLz48cmVjdCB4PSI0MCIgeT0iOCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjgiIHk9IjI0IiB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjI0IiB5PSIyNCIgd2lkdGg9IjgiIGhlaWdodD0iOCIgZmlsbD0id2hpdGUiLz48cmVjdCB4PSI0MCIgeT0iMjQiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IndoaXRlIi8+PHJlY3QgeD0iNTYiIHk9IjI0IiB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjgiIHk9IjQwIiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9IndoaXRlIi8+PHJlY3QgeD0iMzIiIHk9IjQwIiB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjQ4IiB5PSI0MCIgd2lkdGg9IjgiIGhlaWdodD0iOCIgZmlsbD0id2hpdGUiLz48cmVjdCB4PSIyNCIgeT0iNDgiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IndoaXRlIi8+PHJlY3QgeD0iNDAiIHk9IjQ4IiB3aWR0aD0iMTYiIGhlaWdodD0iOCIgZmlsbD0id2hpdGUiLz48cmVjdCB4PSI0OCIgeT0iNTYiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .logo-text h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        .company-info {
+            text-align: right;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .company-info strong {
+            color: #ccc;
+            display: block;
+            font-size: 14px;
+        }
+
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .hero h2 {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #aaa;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .tool-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(40, 167, 69, 0.5);
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tool-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .tool-icon.csv {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .tool-icon.pdf {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .tool-title h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .tool-title p {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .tool-description {
+            color: #bbb;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .tool-features {
+            margin-bottom: 25px;
+        }
+
+        .tool-features h4 {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #ccc;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li::before {
+            content: '+';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .tool-workflow {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .tool-workflow h4 {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .workflow-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .workflow-step {
+            flex: 1;
+            text-align: center;
+            padding: 10px 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .workflow-step strong {
+            display: block;
+            color: #fff;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+
+        .workflow-arrow {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .tool-button {
+            display: block;
+            width: 100%;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .tool-button.csv {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .tool-button.pdf {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tool-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .info-section h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #fff;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .info-item h4 {
+            font-size: 14px;
+            color: #28a745;
+            margin-bottom: 8px;
+        }
+
+        .info-item p {
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.5;
+        }
+
+        .label-preview {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .label-example {
+            width: 180px;
+            height: 120px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .label-qr {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .label-text {
+            font-size: 11px;
+            color: #ccc;
+            text-align: center;
+        }
+
+        .label-size {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 13px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer a {
+            color: #28a745;
+            text-decoration: none;
+        }
+
+        .version {
+            display: inline-block;
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .company-info {
+                text-align: center;
+            }
+            
+            .workflow-steps {
+                flex-direction: column;
+            }
+            
+            .workflow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">S</div>
+                <div class="logo-text">
+                    <h1>SKIF AutoGen</h1>
+                    <p>Система генерации этикеток v2.0</p>
+                </div>
+            </div>
+            <div class="company-info">
+                <strong>Автозапчасти и автомасла</strong>
+                Для внутреннего использования
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="hero">
+            <h2>Инструменты для работы с маркировкой</h2>
+            <p>Генерация QR-кодов и подготовка этикеток для печати. Формат этикеток 60x40 мм, 18 штук на листе А4.</p>
+        </section>
+
+        <div class="tools-grid">
+            <!-- Карточка CSV -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon csv">CSV</div>
+                    <div class="tool-title">
+                        <h3>Генератор из CSV</h3>
+                        <p>index_csv.html</p>
+                    </div>
+                </div>
+                
+                <p class="tool-description">
+                    Генерация QR-кодов из CSV-файлов или ручной ввод криптокодов. 
+                    Подходит для создания новых этикеток на товары. 
+                    Название товара берется из имени файла или вводится вручную.
+                </p>
+
+                <div class="tool-features">
+                    <h4>Возможности</h4>
+                    <ul class="feature-list">
+                        <li>Загрузка нескольких CSV-файлов одновременно</li>
+                        <li>Ручной ввод отдельных криптокодов</li>
+                        <li>Массовый ввод списка кодов</li>
+                        <li>Автоматическое удаление "_gtin..." из названия</li>
+                        <li>Экспорт выбранных кодов в PDF для печати</li>
+                    </ul>
+                </div>
+
+                <div class="tool-workflow">
+                    <h4>Схема работы</h4>
+                    <div class="workflow-steps">
+                        <div class="workflow-step">
+                            <strong>CSV / Ввод</strong>
+                            криптокоды
+                        </div>
+                        <div class="workflow-arrow">--></div>
+                        <div class="workflow-step">
+                            <strong>Генерация</strong>
+                            QR-кодов
+                        </div>
+                        <div class="workflow-arrow">--></div>
+                        <div class="workflow-step">
+                            <strong>Выбор</strong>
+                            нужных
+                        </div>
+                        <div class="workflow-arrow">--></div>
+                        <div class="workflow-step">
+                            <strong>PDF</strong>
+                            для печати
+                        </div>
+                    </div>
+                </div>
+
+                <a href="index_csv.html" class="tool-button csv">Открыть генератор CSV</a>
+            </div>
+
+            <!-- Карточка PDF -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon pdf">PDF</div>
+                    <div class="tool-title">
+                        <h3>Извлечение из PDF</h3>
+                        <p>index_pdf.html</p>
+                    </div>
+                </div>
+                
+                <p class="tool-description">
+                    Извлечение готовых DataMatrix кодов из PDF-файлов. 
+                    Подходит для работы с уже сформированными кодами маркировки.
+                    Есть режим автопрокрутки для сканирования.
+                </p>
+
+                <div class="tool-features">
+                    <h4>Возможности</h4>
+                    <ul class="feature-list">
+                        <li>Загрузка нескольких PDF-файлов</li>
+                        <li>Извлечение изображений в высоком качестве</li>
+                        <li>Автопрокрутка для последовательного сканирования</li>
+                        <li>Горячие клавиши для быстрой работы</li>
+                        <li>Экспорт выбранных кодов в PDF для печати</li>
+                    </ul>
+                </div>
+
+                <div class="tool-workflow">
+                    <h4>Схема работы</h4>
+                    <div class="workflow-steps">
+                        <div class="workflow-step">
+                            <strong>PDF</strong>
+                            с кодами
+                        </div>
+                        <div class="workflow-arrow">--></div>
+                        <div class="workflow-step">
+                            <strong>Извлечение</strong>
+                            изображений
+                        </div>
+                        <div class="workflow-arrow">--></div>
+                        <div class="workflow-step">
+                            <strong>Выбор</strong>
+                            нужных
+                        </div>
+                        <div class="workflow-arrow">--></div>
+                        <div class="workflow-step">
+                            <strong>PDF</strong>
+                            для печати
+                        </div>
+                    </div>
+                </div>
+
+                <a href="index_pdf.html" class="tool-button pdf">Открыть извлечение PDF</a>
+            </div>
+        </div>
+
+        <!-- Информация о формате -->
+        <section class="info-section">
+            <h3>Формат этикеток для печати</h3>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <h4>Размер этикетки</h4>
+                    <p>60 x 40 мм (ширина x высота). Горизонтальная ориентация.</p>
+                </div>
+                <div class="info-item">
+                    <h4>Количество на листе</h4>
+                    <p>3 столбца x 6 строк = 18 этикеток на одном листе А4.</p>
+                </div>
+                <div class="info-item">
+                    <h4>Содержимое этикетки</h4>
+                    <p>QR/DataMatrix код сверху, название товара мелким шрифтом снизу.</p>
+                </div>
+                <div class="info-item">
+                    <h4>Формат вывода</h4>
+                    <p>PDF-файл, готовый к печати на обычном принтере.</p>
+                </div>
+            </div>
+
+            <div class="label-preview">
+                <div class="label-example">
+                    <div class="label-qr">[QR]</div>
+                    <div class="label-text">Название товара</div>
+                    <div class="label-size">60 x 40 мм</div>
+                </div>
+                <div class="label-example">
+                    <div class="label-qr">[QR]</div>
+                    <div class="label-text">Масло моторное 5W-40</div>
+                    <div class="label-size">60 x 40 мм</div>
+                </div>
+                <div class="label-example">
+                    <div class="label-qr">[QR]</div>
+                    <div class="label-text">Фильтр масляный</div>
+                    <div class="label-size">60 x 40 мм</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Горячие клавиши -->
+        <section class="info-section">
+            <h3>Горячие клавиши (работают в обоих инструментах)</h3>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <h4>Ctrl + A</h4>
+                    <p>Выбрать все коды для экспорта</p>
+                </div>
+                <div class="info-item">
+                    <h4>Ctrl + D</h4>
+                    <p>Снять выделение со всех кодов</p>
+                </div>
+                <div class="info-item">
+                    <h4>Ctrl + Space</h4>
+                    <p>Включить/выключить автопрокрутку (только PDF)</p>
+                </div>
+                <div class="info-item">
+                    <h4>Ctrl + UP/DOWN</h4>
+                    <p>Переход к предыдущему/следующему коду (только PDF)</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>
+            SKIF AutoGen <span class="version">v2.0</span> | 
+            Система генерации этикеток для автозапчастей и автомасел | 
+            2024
+        </p>
+        <p style="margin-top: 10px; color: #555;">
+            Для работы требуется современный браузер (Chrome, Firefox, Edge)
+        </p>
+    </footer>
+</body>
+</html>

@@ -38,6 +38,12 @@
             font-weight: 600;
         }
 
+        .header h1 a {
+            text-decoration: none;
+            color: inherit; /* возьмёт цвет заголовка */
+            cursor: pointer;
+        }
+
         .stats {
             display: flex;
             gap: 20px;
@@ -534,7 +540,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Генератор QR-кодов</h1>
+        <h1><a href="index.html">Генератор QR-кодов</a></h1>
         <div class="stats">
             <div class="stat-item">
                 <div>Всего: <span class="stat-value" id="totalCount">0</span></div>

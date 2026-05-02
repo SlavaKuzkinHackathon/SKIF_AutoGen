@@ -6,6 +6,8 @@
     <title>Генератор QR-кодов</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -33,33 +35,12 @@
             align-items: center;
         }
 
-        .header h1 {
-            font-size: 20px;
-            font-weight: 600;
-        }
+        .header h1 { font-size: 20px; font-weight: 600; }
+        .header h1 a { text-decoration: none; color: inherit; cursor: pointer; }
 
-        .header h1 a {
-            text-decoration: none;
-            color: inherit; /* возьмёт цвет заголовка */
-            cursor: pointer;
-        }
-
-        .stats {
-            display: flex;
-            gap: 20px;
-            font-size: 14px;
-        }
-
-        .stat-item {
-            background: rgba(255,255,255,0.2);
-            padding: 5px 15px;
-            border-radius: 15px;
-        }
-
-        .stat-value {
-            font-weight: bold;
-            font-size: 18px;
-        }
+        .stats { display: flex; gap: 20px; font-size: 14px; }
+        .stat-item { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 15px; }
+        .stat-value { font-weight: bold; font-size: 18px; }
 
         .controls {
             position: fixed;
@@ -71,7 +52,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             z-index: 999;
             display: flex;
-            gap: 15px;
+            gap: 10px;
             align-items: center;
             flex-wrap: wrap;
         }
@@ -88,54 +69,26 @@
             transition: all 0.3s;
         }
 
-        .btn:hover {
-            background: #218838;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
+        .btn:hover { background: #218838; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn-primary { background: #007bff; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-purple { background: #6f42c1; }
+        .btn-purple:hover { background: #5a32a3; }
+        .btn-info { background: #17a2b8; }
+        .btn-info:hover { background: #138496; }
+        .btn-dark { background: #343a40; }
+        .btn-dark:hover { background: #23272b; }
+        .btn-word { background: #2b579a; }
+        .btn-word:hover { background: #1e3f6f; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-        .btn-primary {
-            background: #007bff;
-        }
-
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #333;
-        }
-
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn-purple {
-            background: #6f42c1;
-        }
-
-        .btn-purple:hover {
-            background: #5a32a3;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
+        input[type="file"] { display: none; }
 
         .content {
             margin-top: 140px;
@@ -183,56 +136,19 @@
             background: #f8fff8;
         }
 
-        .upload-zone:hover {
-            background: #e8f5e9;
-            border-color: #20c997;
-        }
+        .upload-zone:hover { background: #e8f5e9; border-color: #20c997; }
+        .upload-zone.dragover { background: #d4edda; border-color: #20c997; transform: scale(1.02); }
+        .upload-zone p { color: #666; margin: 10px 0; }
+        .upload-zone .icon { font-size: 32px; margin-bottom: 10px; color: #28a745; font-weight: bold; }
 
-        .upload-zone.dragover {
-            background: #d4edda;
-            border-color: #20c997;
-            transform: scale(1.02);
-        }
-
-        .upload-zone p {
-            color: #666;
-            margin: 10px 0;
-        }
-
-        .upload-zone .icon {
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: #28a745;
-            font-weight: bold;
-        }
-
-        .manual-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-        }
-
-        .form-group {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .form-group label {
-            font-weight: 500;
-            color: #333;
-            font-size: 14px;
-        }
+        .manual-form { display: flex; flex-direction: column; gap: 15px; }
+        .form-row { display: flex; gap: 15px; align-items: flex-end; }
+        .form-group { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-weight: 500; color: #333; font-size: 14px; }
 
         .form-group input,
-        .form-group textarea {
+        .form-group textarea,
+        .form-group select {
             padding: 12px 15px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
@@ -241,33 +157,17 @@
         }
 
         .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #28a745;
-        }
+        .form-group textarea:focus { outline: none; border-color: #28a745; }
 
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-            font-family: monospace;
-        }
+        .form-group input.invalid { border-color: #dc3545; background: #fff5f5; }
+        .form-group textarea.invalid { border-color: #dc3545; background: #fff5f5; }
 
-        .form-group .hint {
-            font-size: 12px;
-            color: #999;
-        }
+        .form-group textarea { min-height: 100px; resize: vertical; font-family: monospace; }
+        .form-group .hint { font-size: 12px; color: #999; }
+        .form-group .hint.error { color: #dc3545; font-weight: 500; }
+        .form-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .files-list {
-            margin-top: 15px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
+        .files-list { margin-top: 15px; max-height: 150px; overflow-y: auto; }
 
         .file-item {
             display: flex;
@@ -279,28 +179,8 @@
             margin-bottom: 8px;
         }
 
-        .file-item .file-name {
-            font-weight: 500;
-            color: #333;
-        }
-
-        .file-item .file-count {
-            color: #28a745;
-            font-weight: bold;
-        }
-
-        .file-item .remove-btn {
-            background: none;
-            border: none;
-            color: #dc3545;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 5px;
-        }
-
-        .file-item .remove-btn:hover {
-            color: #a71d2a;
-        }
+        .file-item .file-name { font-weight: 500; color: #333; }
+        .file-item .file-count { color: #28a745; font-weight: bold; }
 
         .codes-grid {
             display: grid;
@@ -323,219 +203,186 @@
             border: 2px solid transparent;
         }
 
-        .code-item:hover {
-            background: #f0f0f0;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .code-item.selected {
-            background: #d4edda;
-            border: 2px solid #28a745;
-        }
+        .code-item:hover { background: #f0f0f0; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .code-item.selected { background: #d4edda; border: 2px solid #28a745; }
 
         .code-checkbox {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #28a745;
+            position: absolute; top: 8px; left: 8px;
+            width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;
         }
 
         .code-number {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            font-size: 11px;
-            color: #999;
-            font-weight: 600;
-            background: white;
-            padding: 2px 8px;
-            border-radius: 10px;
+            position: absolute; top: 8px; right: 8px;
+            font-size: 11px; color: #999; font-weight: 600;
+            background: white; padding: 2px 8px; border-radius: 10px;
         }
 
         .code-remove {
-            position: absolute;
-            top: 8px;
-            right: 35px;
-            font-size: 14px;
-            color: #dc3545;
-            cursor: pointer;
-            background: white;
-            border: none;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: bold;
+            position: absolute; top: 8px; right: 35px;
+            font-size: 14px; color: #dc3545; cursor: pointer;
+            background: white; border: none; padding: 2px 6px;
+            border-radius: 10px; font-weight: bold;
         }
 
-        .code-remove:hover {
-            background: #dc3545;
-            color: white;
-        }
+        .code-remove:hover { background: #dc3545; color: white; }
 
         .qr-wrapper {
-            background: white;
-            padding: 8px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin: 8px 0;
+            background: white; padding: 8px; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 8px 0;
         }
 
-        .qr-wrapper img {
-            display: block;
-            width: 120px;
-            height: 120px;
-        }
+        .qr-wrapper img { display: block; width: 120px; height: 120px; }
 
         .code-name {
-            font-size: 11px;
-            font-weight: bold;
-            color: #333;
-            text-align: center;
-            max-width: 160px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 11px; font-weight: bold; color: #333; text-align: center;
+            max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
 
         .code-data {
-            font-size: 9px;
-            color: #999;
-            word-break: break-all;
-            text-align: center;
-            max-width: 160px;
-            margin-top: 4px;
-            background: #f8f9fa;
-            padding: 4px 6px;
-            border-radius: 4px;
+            font-size: 9px; color: #999; word-break: break-all; text-align: center;
+            max-width: 160px; margin-top: 4px; background: #f8f9fa;
+            padding: 4px 6px; border-radius: 4px;
         }
 
-        .code-source {
-            font-size: 9px;
-            color: #6f42c1;
-            margin-top: 4px;
-        }
+        .code-source { font-size: 9px; color: #6f42c1; margin-top: 4px; }
 
         .selection-controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+            padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 15px;
         }
 
         .selected-count {
-            font-weight: bold;
-            color: #28a745;
-            padding: 8px 15px;
-            background: white;
-            border-radius: 5px;
-            font-size: 14px;
+            font-weight: bold; color: #28a745; padding: 8px 15px;
+            background: white; border-radius: 5px; font-size: 14px;
         }
 
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-
-        .loading.active {
-            display: block;
-        }
+        .loading { display: none; text-align: center; padding: 40px; }
+        .loading.active { display: block; }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #28a745;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            border: 4px solid #f3f3f3; border-top: 4px solid #28a745;
+            border-radius: 50%; width: 50px; height: 50px;
+            animation: spin 1s linear infinite; margin: 0 auto 15px;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .progress {
-            width: 100%;
-            height: 25px;
-            background: #e0e0e0;
-            border-radius: 12px;
-            overflow: hidden;
-            margin: 15px 0;
-            display: none;
+            width: 100%; height: 25px; background: #e0e0e0;
+            border-radius: 12px; overflow: hidden; margin: 15px 0; display: none;
         }
 
-        .progress.active {
-            display: block;
-        }
+        .progress.active { display: block; }
 
         .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
-            width: 0%;
-            transition: width 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
+            width: 0%; transition: width 0.3s;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 12px;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; color: #ccc; }
 
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-            color: #ccc;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 20px;
-        }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
 
         .tab {
-            padding: 10px 20px;
-            background: #f0f0f0;
-            border: none;
-            border-radius: 8px 8px 0 0;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
-            transition: all 0.3s;
+            padding: 10px 20px; background: #f0f0f0; border: none;
+            border-radius: 8px 8px 0 0; cursor: pointer;
+            font-size: 14px; font-weight: 500; color: #666; transition: all 0.3s;
         }
 
-        .tab:hover {
-            background: #e0e0e0;
+        .tab:hover { background: #e0e0e0; }
+        .tab.active { background: #28a745; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Модальное окно */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 2000;
+            justify-content: center; align-items: center;
         }
 
-        .tab.active {
-            background: #28a745;
-            color: white;
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: white; border-radius: 15px; padding: 25px;
+            max-width: 700px; width: 90%; max-height: 80vh;
+            overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        .tab-content {
-            display: none;
+        .modal h2 {
+            margin-bottom: 20px; color: #333;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .tab-content.active {
-            display: block;
+        .modal-close {
+            background: none; border: none; font-size: 24px;
+            cursor: pointer; color: #999; padding: 5px;
         }
+
+        .modal-close:hover { color: #333; }
+
+        .json-preview {
+            background: #1e1e1e; color: #d4d4d4; padding: 15px;
+            border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 12px; max-height: 300px; overflow-y: auto;
+            white-space: pre-wrap; word-break: break-all;
+        }
+
+        /* История */
+        .history-list { max-height: 400px; overflow-y: auto; }
+
+        .history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 15px; background: #f8f9fa; border-radius: 8px;
+            margin-bottom: 8px; border-left: 4px solid #28a745;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover { background: #e8f5e9; }
+        .history-info { flex: 1; }
+        .history-date { font-weight: 600; color: #333; font-size: 14px; }
+
+        .history-meta {
+            font-size: 12px; color: #666; margin-top: 4px;
+            display: flex; gap: 15px; flex-wrap: wrap;
+        }
+
+        .history-meta span { display: inline-flex; align-items: center; gap: 4px; }
+        .history-actions { display: flex; gap: 8px; }
+        .no-history { text-align: center; padding: 30px; color: #999; }
+
+        .history-summary {
+            display: flex; gap: 15px; margin-bottom: 15px;
+            padding: 15px; background: #e8f5e9; border-radius: 8px; flex-wrap: wrap;
+        }
+
+        .summary-item { text-align: center; flex: 1; min-width: 100px; }
+        .summary-item .summary-value { font-size: 24px; font-weight: bold; color: #28a745; }
+        .summary-item .summary-label { font-size: 12px; color: #666; }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: #333; color: white; padding: 15px 25px;
+            border-radius: 10px; font-size: 14px; z-index: 3000;
+            transform: translateY(100px); opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-width: 400px;
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.info { background: #17a2b8; }
+
+        /* Validation indicator */
+        .validation-ok { color: #28a745; font-weight: bold; }
+        .validation-bad { color: #dc3545; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -552,18 +399,19 @@
     </div>
 
     <div class="controls">
-        <button class="btn btn-primary" id="exportBtn" onclick="exportToPDF()" disabled>
-            Экспорт в PDF
-        </button>
-        <button class="btn btn-warning" onclick="selectAll()">[+] Выбрать все</button>
-        <button class="btn" onclick="deselectAll()">[-] Снять все</button>
+        <button class="btn btn-primary" id="exportBtn" onclick="exportToPDF()" disabled>PDF</button>
+        <button class="btn btn-word" id="exportWordBtn" onclick="exportToWord()" disabled>Word</button>
+        <button class="btn btn-warning" onclick="selectAll()">[+] Все</button>
+        <button class="btn" onclick="deselectAll()">[-] Снять</button>
+        <button class="btn btn-info" onclick="showHistory()">История</button>
+        <button class="btn btn-dark" onclick="exportJSON()">JSON</button>
         <button class="btn btn-danger" onclick="clearAll()">Очистить</button>
     </div>
 
     <div class="content">
         <div class="section">
             <h2>Добавить QR-коды</h2>
-            
+
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('csv')">Из CSV файлов</button>
                 <button class="tab" onclick="switchTab('manual')">Ручной ввод</button>
@@ -576,11 +424,10 @@
                     <p><strong>Перетащите CSV файлы сюда</strong></p>
                     <p>или нажмите для выбора</p>
                     <p style="font-size: 12px; color: #999; margin-top: 15px;">
-                        Можно выбрать несколько файлов. Название берется из имени файла.
+                        Можно выбрать несколько файлов. Название берётся из имени файла.
                     </p>
                 </div>
                 <input type="file" id="fileInput" accept=".csv,.txt" multiple>
-                
                 <div class="files-list" id="filesList"></div>
             </div>
 
@@ -589,8 +436,8 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="manualCode">Криптокод (данные для QR)</label>
-                            <input type="text" id="manualCode" placeholder="0104589794982915215*:?nymuh!SNM">
-                            <span class="hint">Текст, который будет закодирован в QR-код</span>
+                            <input type="text" id="manualCode" placeholder="0104589794982915215*:?nymuh!SNM" oninput="validateCodeInput(this)">
+                            <span class="hint" id="manualCodeHint">Цифры, знаки и латинские буквы. Кириллица запрещена.</span>
                         </div>
                         <div class="form-group">
                             <label for="manualName">Название</label>
@@ -614,8 +461,8 @@
                         <label for="bulkCodes">Криптокоды (каждый с новой строки)</label>
                         <textarea id="bulkCodes" placeholder="0104589794982915215*:?nymuh!SNM
 0104589794982915215*:?abcde!XYZ
-0104589794982915215*:?qwert!ABC"></textarea>
-                        <span class="hint">Каждая строка - отдельный QR-код. Пустые строки игнорируются.</span>
+0104589794982915215*:?qwert!ABC" oninput="validateBulkInput(this)"></textarea>
+                        <span class="hint" id="bulkCodesHint">Цифры, знаки и латинские буквы. Кириллица запрещена.</span>
                     </div>
                     <div class="form-actions">
                         <button class="btn btn-purple" onclick="addBulkCodes()">[+] Добавить все</button>
@@ -634,19 +481,20 @@
 
         <div class="section" id="codesSection" style="display: none;">
             <h2>
-                QR-коды 
+                QR-коды
                 <span class="badge" id="codesCountBadge">0</span>
             </h2>
-            
+
             <div class="selection-controls">
                 <span class="selected-count">Выбрано: <span id="selectedCountInline">0</span></span>
-                <button class="btn" onclick="selectAll()">[+] Все</button>
-                <button class="btn btn-warning" onclick="deselectAll()">[-] Снять</button>
-                <button class="btn btn-primary" onclick="exportToPDF()">PDF</button>
+                <button class="btn btn-sm" onclick="selectAll()">[+] Все</button>
+                <button class="btn btn-sm btn-warning" onclick="deselectAll()">[-] Снять</button>
+                <button class="btn btn-sm btn-primary" onclick="exportToPDF()">PDF</button>
+                <button class="btn btn-sm btn-word" onclick="exportToWord()">Word</button>
             </div>
 
             <div class="codes-grid" id="codesGrid"></div>
-            
+
             <div class="empty-state" id="emptyState">
                 <div class="icon">[ ]</div>
                 <p>Пока нет QR-кодов</p>
@@ -655,456 +503,1019 @@
         </div>
     </div>
 
+    <!-- Модальное окно истории -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal">
+            <h2>
+                История создания
+                <button class="modal-close" onclick="closeHistory()">&times;</button>
+            </h2>
+            <div id="historyContent"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно JSON -->
+    <div class="modal-overlay" id="jsonModal">
+        <div class="modal">
+            <h2>
+                Данные JSON
+                <button class="modal-close" onclick="closeJsonModal()">&times;</button>
+            </h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-primary" onclick="downloadJSON()">Скачать</button>
+                <button class="btn btn-sm btn-info" onclick="copyJSON()">Копировать</button>
+                <label class="btn btn-sm btn-warning" style="cursor: pointer;">
+                    Загрузить JSON
+                    <input type="file" accept=".json" onchange="importJSON(event)" style="display:none">
+                </label>
+                <button class="btn btn-sm btn-danger" onclick="clearJSONData()">Очистить данные</button>
+            </div>
+            <div class="json-preview" id="jsonPreview"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
     <script>
-        let allCodes = [];
-        let selectedCodes = new Set();
+        var allCodes = [];
+        var selectedCodes = {};
+        var selectedCount = 0;
 
-        const uploadZone = document.getElementById('uploadZone');
-        const fileInput = document.getElementById('fileInput');
-        const codesGrid = document.getElementById('codesGrid');
+        var HISTORY_KEY = 'qr_gen_history';
+        var SESSION_KEY = 'qr_gen_sessions';
 
-        // Горячие клавиши
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 'a' && allCodes.length > 0) {
-                e.preventDefault();
-                selectAll();
-            }
-            if (e.ctrlKey && e.key === 'd' && allCodes.length > 0) {
-                e.preventDefault();
-                deselectAll();
-            }
-            if (e.key === 'Enter' && !e.shiftKey) {
-                const activeTab = document.querySelector('.tab-content.active');
-                if (activeTab.id === 'tab-manual') {
-                    e.preventDefault();
-                    addManualCode();
-                }
-            }
-        });
+        var uploadZone = document.getElementById('uploadZone');
+        var fileInput = document.getElementById('fileInput');
+        var codesGrid = document.getElementById('codesGrid');
 
-        // Табы
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            document.querySelector('.tab-content#tab-' + tabName).classList.add('active');
-            event.target.classList.add('active');
+        // ========================================
+        // TOAST
+        // ========================================
+
+        function showToast(message, type, duration) {
+            type = type || 'info';
+            duration = duration || 3000;
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            if (toast._timer) clearTimeout(toast._timer);
+            toast._timer = setTimeout(function() {
+                toast.className = 'toast';
+            }, duration);
         }
 
-        // Drag & Drop
-        uploadZone.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            uploadZone.classList.add('dragover');
-        });
+        // ========================================
+        // ВАЛИДАЦИЯ КРИПТОКОДОВ
+        // ========================================
 
-        uploadZone.addEventListener('dragleave', function() {
-            uploadZone.classList.remove('dragover');
-        });
+        // Проверка: разрешены цифры, латинские буквы, знаки. Кириллица ЗАПРЕЩЕНА.
+        function hasCyrillic(text) {
+            return /[а-яА-ЯёЁ]/.test(text);
+        }
 
-        uploadZone.addEventListener('drop', function(e) {
+        function validateCodeString(code) {
+            if (!code || code.length === 0) {
+                return { valid: false, message: 'Код не может быть пустым' };
+            }
+            if (hasCyrillic(code)) {
+                // Найдём конкретные кириллические символы
+                var cyrChars = code.match(/[а-яА-ЯёЁ]/g);
+                var unique = [];
+                for (var i = 0; i < cyrChars.length; i++) {
+                    if (unique.indexOf(cyrChars[i]) === -1) unique.push(cyrChars[i]);
+                }
+                return {
+                    valid: false,
+                    message: 'Найдена кириллица: "' + unique.join('", "') + '". Допускаются только латинские буквы, цифры и знаки.'
+                };
+            }
+            return { valid: true, message: '' };
+        }
+
+        function validateCodeInput(input) {
+            var value = input.value;
+            var hint = document.getElementById('manualCodeHint');
+
+            if (value.length === 0) {
+                input.className = input.className.replace(' invalid', '');
+                hint.className = 'hint';
+                hint.textContent = 'Цифры, знаки и латинские буквы. Кириллица запрещена.';
+                return;
+            }
+
+            var result = validateCodeString(value);
+            if (!result.valid) {
+                if (input.className.indexOf('invalid') === -1) input.className += ' invalid';
+                hint.className = 'hint error';
+                hint.textContent = result.message;
+            } else {
+                input.className = input.className.replace(' invalid', '');
+                hint.className = 'hint validation-ok';
+                hint.textContent = 'OK (' + value.length + ' символов)';
+            }
+        }
+
+        function validateBulkInput(textarea) {
+            var value = textarea.value;
+            var hint = document.getElementById('bulkCodesHint');
+
+            if (value.length === 0) {
+                textarea.className = textarea.className.replace(' invalid', '');
+                hint.className = 'hint';
+                hint.textContent = 'Цифры, знаки и латинские буквы. Кириллица запрещена.';
+                return;
+            }
+
+            var lines = value.split(/\r?\n/);
+            var badLines = [];
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (line.length > 0 && hasCyrillic(line)) {
+                    badLines.push(i + 1);
+                }
+            }
+
+            if (badLines.length > 0) {
+                if (textarea.className.indexOf('invalid') === -1) textarea.className += ' invalid';
+                hint.className = 'hint error';
+                hint.textContent = 'Кириллица в строках: ' + badLines.join(', ') + '. Используйте только латиницу.';
+            } else {
+                textarea.className = textarea.className.replace(' invalid', '');
+                var totalLines = lines.filter(function(l) { return l.trim().length > 0; }).length;
+                hint.className = 'hint validation-ok';
+                hint.textContent = 'OK (' + totalLines + ' кодов)';
+            }
+        }
+
+        // ========================================
+        // БЕЗОПАСНЫЙ localStorage
+        // ========================================
+
+        var hasStorage = false;
+        try {
+            var testKey = '__test__';
+            localStorage.setItem(testKey, testKey);
+            localStorage.removeItem(testKey);
+            hasStorage = true;
+        } catch (e) {
+            hasStorage = false;
+        }
+
+        function safeGet(key) {
+            if (!hasStorage) return null;
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        }
+
+        function safeSet(key, value) {
+            if (!hasStorage) return false;
+            try { localStorage.setItem(key, value); return true; } catch (e) { return false; }
+        }
+
+        function safeRemove(key) {
+            if (!hasStorage) return;
+            try { localStorage.removeItem(key); } catch (e) {}
+        }
+
+        // ========================================
+        // ИСТОРИЯ
+        // ========================================
+
+        function getHistory() {
+            try { return JSON.parse(safeGet(HISTORY_KEY) || '[]'); } catch (e) { return []; }
+        }
+
+        function saveHistoryData(history) {
+            if (history.length > 100) history = history.slice(0, 100);
+            safeSet(HISTORY_KEY, JSON.stringify(history));
+        }
+
+        function addToHistory(action, details) {
+            var history = getHistory();
+            history.unshift({
+                id: new Date().getTime().toString(36) + Math.random().toString(36).substr(2, 4),
+                timestamp: new Date().toISOString(),
+                action: action,
+                details: details || {},
+                totalCodesAtMoment: allCodes.length
+            });
+            saveHistoryData(history);
+        }
+
+        function getSessions() {
+            try { return JSON.parse(safeGet(SESSION_KEY) || '[]'); } catch (e) { return []; }
+        }
+
+        function saveSessions(sessions) {
+            if (sessions.length > 30) sessions = sessions.slice(0, 30);
+            safeSet(SESSION_KEY, JSON.stringify(sessions));
+        }
+
+        function saveCurrentSession() {
+            if (allCodes.length === 0) { showToast('Нет кодов для сохранения', 'error'); return; }
+            var name = prompt('Название сессии:', 'Сессия ' + new Date().toLocaleString('ru'));
+            if (name === null) return;
+
+            var sessions = getSessions();
+            sessions.unshift({
+                id: new Date().getTime().toString(36),
+                name: name,
+                timestamp: new Date().toISOString(),
+                codes: allCodes.map(function(c) {
+                    return { data: c.data, name: c.name, source: c.source, fileName: c.fileName || null };
+                }),
+                totalCodes: allCodes.length
+            });
+            saveSessions(sessions);
+            addToHistory('session_save', { name: name, count: allCodes.length });
+            showToast('Сессия "' + name + '" сохранена!', 'success');
+            showHistory();
+        }
+
+        function loadSession(sessionId) {
+            var sessions = getSessions();
+            var session = null;
+            for (var i = 0; i < sessions.length; i++) {
+                if (sessions[i].id === sessionId) { session = sessions[i]; break; }
+            }
+            if (!session) { showToast('Сессия не найдена', 'error'); return; }
+            if (allCodes.length > 0 && !confirm('Текущие коды будут заменены. Продолжить?')) return;
+
+            closeHistory();
+            allCodes = [];
+            selectedCodes = {};
+            selectedCount = 0;
+            showLoading(true);
+
+            var idx = 0;
+            function processNext() {
+                if (idx >= session.codes.length) {
+                    showLoading(false);
+                    addToHistory('session_load', { name: session.name, count: session.codes.length });
+                    displayCodes();
+                    updateStats();
+                    showToast('Загружена: ' + session.name + ' (' + allCodes.length + ' кодов)', 'success');
+                    return;
+                }
+
+                var code = session.codes[idx];
+                updateProgress(((idx + 1) / session.codes.length) * 100, (idx + 1) + '/' + session.codes.length + ': Восстановление...');
+
+                generateQRCode(code.data, function(qrData) {
+                    allCodes.push({
+                        data: code.data, name: code.name,
+                        qrDataUrl: qrData, source: code.source, fileName: code.fileName
+                    });
+                    idx++;
+                    setTimeout(processNext, idx % 5 === 0 ? 10 : 0);
+                });
+            }
+            processNext();
+        }
+
+        function deleteSession(sessionId) {
+            if (!confirm('Удалить эту сессию?')) return;
+            var sessions = getSessions();
+            var newSessions = [];
+            for (var i = 0; i < sessions.length; i++) {
+                if (sessions[i].id !== sessionId) newSessions.push(sessions[i]);
+            }
+            saveSessions(newSessions);
+            showHistory();
+        }
+
+        function clearHistory() {
+            if (!confirm('Очистить всю историю и сохранённые сессии?')) return;
+            safeRemove(HISTORY_KEY);
+            safeRemove(SESSION_KEY);
+            showToast('История очищена', 'info');
+            showHistory();
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        function showHistory() {
+            var history = getHistory();
+            var sessions = getSessions();
+            var container = document.getElementById('historyContent');
+
+            if (!hasStorage) {
+                container.innerHTML = '<div class="no-history">' +
+                    '<p style="font-size:16px; margin-bottom:10px;">localStorage недоступен</p>' +
+                    '<p>Режим инкогнито или старый браузер. История не сохраняется.</p>' +
+                    '<p>Экспорт в JSON/Word/PDF работает!</p></div>';
+                document.getElementById('historyModal').classList.add('active');
+                return;
+            }
+
+            var totalActions = history.length;
+            var totalSessions = sessions.length;
+            var totalCodesEver = 0;
+            for (var h = 0; h < history.length; h++) {
+                if (history[h].details && history[h].details.count) totalCodesEver += history[h].details.count;
+            }
+
+            var html = '<div class="history-summary">' +
+                '<div class="summary-item"><div class="summary-value">' + totalActions + '</div><div class="summary-label">Действий</div></div>' +
+                '<div class="summary-item"><div class="summary-value">' + totalSessions + '</div><div class="summary-label">Сессий</div></div>' +
+                '<div class="summary-item"><div class="summary-value">' + totalCodesEver + '</div><div class="summary-label">Кодов создано</div></div>' +
+                '</div>';
+
+            html += '<div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">';
+            html += '<button class="btn btn-sm" onclick="saveCurrentSession()">Сохранить сессию</button>';
+            html += '<button class="btn btn-sm btn-danger" onclick="clearHistory()">Очистить всё</button>';
+            html += '</div>';
+
+            if (sessions.length > 0) {
+                html += '<h3 style="margin:15px 0 10px; color:#333;">Сохранённые сессии</h3>';
+                html += '<div class="history-list" style="max-height:200px;">';
+                for (var s = 0; s < sessions.length; s++) {
+                    var sess = sessions[s];
+                    var sDate = new Date(sess.timestamp).toLocaleString('ru');
+                    html += '<div class="history-item" style="border-left-color:#6f42c1;">' +
+                        '<div class="history-info">' +
+                        '<div class="history-date">' + escapeHtml(sess.name) + '</div>' +
+                        '<div class="history-meta">' +
+                        '<span>' + sDate + '</span>' +
+                        '<span>' + sess.totalCodes + ' кодов</span>' +
+                        '</div></div>' +
+                        '<div class="history-actions">' +
+                        '<button class="btn btn-sm btn-primary" onclick="loadSession(\'' + sess.id + '\')">Загрузить</button>' +
+                        '<button class="btn btn-sm btn-danger" onclick="deleteSession(\'' + sess.id + '\')">X</button>' +
+                        '</div></div>';
+                }
+                html += '</div>';
+            }
+
+            html += '<h3 style="margin:15px 0 10px; color:#333;">Журнал действий</h3>';
+
+            if (history.length === 0) {
+                html += '<div class="no-history">Пока пусто</div>';
+            } else {
+                var actionLabels = {
+                    'csv_import': 'Импорт CSV', 'manual_add': 'Ручной ввод',
+                    'bulk_add': 'Массовый ввод', 'export_pdf': 'Экспорт PDF',
+                    'export_word': 'Экспорт Word', 'export_json': 'Экспорт JSON',
+                    'import_json': 'Импорт JSON', 'session_save': 'Сохранение сессии',
+                    'session_load': 'Загрузка сессии', 'clear_all': 'Очистка',
+                    'clear_json': 'Очистка JSON данных'
+                };
+
+                html += '<div class="history-list">';
+                var limit = Math.min(history.length, 50);
+                for (var i = 0; i < limit; i++) {
+                    var entry = history[i];
+                    var date = new Date(entry.timestamp).toLocaleString('ru');
+                    var label = actionLabels[entry.action] || entry.action;
+
+                    var metaHtml = '<span>' + date + '</span>';
+                    if (entry.details) {
+                        if (entry.details.count) metaHtml += '<span>' + entry.details.count + ' шт.</span>';
+                        if (entry.details.fileName) metaHtml += '<span>' + escapeHtml(entry.details.fileName) + '</span>';
+                        if (entry.details.name) metaHtml += '<span>' + escapeHtml(entry.details.name) + '</span>';
+                        if (entry.details.pages) metaHtml += '<span>' + entry.details.pages + ' стр.</span>';
+                    }
+
+                    html += '<div class="history-item"><div class="history-info">' +
+                        '<div class="history-date">' + label + '</div>' +
+                        '<div class="history-meta">' + metaHtml + '</div>' +
+                        '</div></div>';
+                }
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+            document.getElementById('historyModal').classList.add('active');
+        }
+
+        function closeHistory() {
+            document.getElementById('historyModal').classList.remove('active');
+        }
+
+        // ========================================
+        // JSON ЭКСПОРТ/ИМПОРТ/ОЧИСТКА
+        // ========================================
+
+        function buildFullJSON() {
+            var bySource = {};
+            var namesMap = {};
+            for (var i = 0; i < allCodes.length; i++) {
+                bySource[allCodes[i].source] = (bySource[allCodes[i].source] || 0) + 1;
+                namesMap[allCodes[i].name] = true;
+            }
+            var uniqueNames = [];
+            for (var n in namesMap) { if (namesMap.hasOwnProperty(n)) uniqueNames.push(n); }
+
+            var codes = [];
+            for (var j = 0; j < allCodes.length; j++) {
+                codes.push({
+                    index: j + 1,
+                    data: allCodes[j].data,
+                    name: allCodes[j].name,
+                    source: allCodes[j].source,
+                    fileName: allCodes[j].fileName || null,
+                    selected: !!selectedCodes[j]
+                });
+            }
+
+            return {
+                exportDate: new Date().toISOString(),
+                appVersion: '2.2',
+                summary: { totalCodes: allCodes.length, bySource: bySource, uniqueNames: uniqueNames },
+                codes: codes
+            };
+        }
+
+        function exportJSON() {
+            var data = buildFullJSON();
+            document.getElementById('jsonPreview').textContent = JSON.stringify(data, null, 2);
+            document.getElementById('jsonModal').classList.add('active');
+            addToHistory('export_json', { count: allCodes.length });
+        }
+
+        function closeJsonModal() {
+            document.getElementById('jsonModal').classList.remove('active');
+        }
+
+        function downloadJSON() {
+            var data = buildFullJSON();
+            var jsonStr = JSON.stringify(data, null, 2);
+            var blob = new Blob([jsonStr], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'QR_Data_' + new Date().toISOString().slice(0, 10) + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('JSON файл скачан', 'success');
+        }
+
+        function copyJSON() {
+            var data = buildFullJSON();
+            var jsonStr = JSON.stringify(data, null, 2);
+
+            if (window.clipboardData) {
+                // IE
+                window.clipboardData.setData('Text', jsonStr);
+                showToast('JSON скопирован', 'success');
+            } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(jsonStr).then(function() {
+                    showToast('JSON скопирован', 'success');
+                });
+            } else {
+                var textarea = document.createElement('textarea');
+                textarea.value = jsonStr;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try { document.execCommand('copy'); showToast('JSON скопирован', 'success'); }
+                catch (e) { showToast('Не удалось скопировать', 'error'); }
+                document.body.removeChild(textarea);
+            }
+        }
+
+        function clearJSONData() {
+            if (allCodes.length === 0) {
+                showToast('Данные уже пусты', 'info');
+                return;
+            }
+            if (!confirm('Очистить все QR-коды и данные?\n\nЭто удалит все текущие коды.')) return;
+
+            addToHistory('clear_json', { count: allCodes.length });
+
+            allCodes = [];
+            selectedCodes = {};
+            selectedCount = 0;
+
+            codesGrid.innerHTML = '';
+            document.getElementById('filesList').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('manualCode').value = '';
+            document.getElementById('manualName').value = '';
+            document.getElementById('bulkCodes').value = '';
+            document.getElementById('bulkName').value = '';
+
+            updateStats();
+            displayCodes();
+
+            // Обновляем превью JSON
+            var data = buildFullJSON();
+            document.getElementById('jsonPreview').textContent = JSON.stringify(data, null, 2);
+
+            showToast('Все данные очищены', 'success');
+        }
+
+        function importJSON(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var data = JSON.parse(e.target.result);
+
+                    if (!data.codes || !data.codes.length) {
+                        showToast('Неверный формат JSON или нет кодов', 'error');
+                        return;
+                    }
+
+                    if (allCodes.length > 0 && !confirm('Текущие коды будут заменены. Продолжить?')) return;
+
+                    closeJsonModal();
+                    allCodes = [];
+                    selectedCodes = {};
+                    selectedCount = 0;
+                    showLoading(true);
+
+                    var idx = 0;
+                    function processNext() {
+                        if (idx >= data.codes.length) {
+                            showLoading(false);
+                            addToHistory('import_json', { count: data.codes.length, fileName: file.name });
+                            displayCodes();
+                            updateStats();
+                            showToast('Импортировано ' + allCodes.length + ' кодов из JSON', 'success');
+                            return;
+                        }
+
+                        var code = data.codes[idx];
+                        updateProgress(((idx + 1) / data.codes.length) * 100, (idx + 1) + '/' + data.codes.length + ': Импорт...');
+
+                        generateQRCode(code.data, function(qrDataUrl) {
+                            allCodes.push({
+                                data: code.data, name: code.name,
+                                qrDataUrl: qrDataUrl, source: code.source || 'json',
+                                fileName: code.fileName || null
+                            });
+                            if (code.selected) { selectedCodes[idx] = true; selectedCount++; }
+                            idx++;
+                            setTimeout(processNext, idx % 5 === 0 ? 10 : 0);
+                        });
+                    }
+                    processNext();
+                } catch (err) {
+                    showToast('Ошибка чтения JSON: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ========================================
+        // ГОРЯЧИЕ КЛАВИШИ
+        // ========================================
+
+        document.onkeydown = function(e) {
+            if (e.ctrlKey && (e.key === 'a' || e.keyCode === 65) && allCodes.length > 0) {
+                e.preventDefault(); selectAll();
+            }
+            if (e.ctrlKey && (e.key === 'd' || e.keyCode === 68) && allCodes.length > 0) {
+                e.preventDefault(); deselectAll();
+            }
+            if ((e.key === 'Escape' || e.keyCode === 27)) { closeHistory(); closeJsonModal(); }
+            if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey) {
+                var activeTab = document.querySelector('.tab-content.active');
+                if (activeTab && activeTab.id === 'tab-manual') { e.preventDefault(); addManualCode(); }
+            }
+        };
+
+        // ========================================
+        // ТАБЫ
+        // ========================================
+
+        function switchTab(tabName) {
+            var tabs = document.querySelectorAll('.tab');
+            var contents = document.querySelectorAll('.tab-content');
+            for (var i = 0; i < tabs.length; i++) tabs[i].className = 'tab';
+            for (var j = 0; j < contents.length; j++) contents[j].className = 'tab-content';
+            document.getElementById('tab-' + tabName).className = 'tab-content active';
+
+            // Активируем правильную вкладку
+            var tabButtons = document.querySelectorAll('.tab');
+            for (var k = 0; k < tabButtons.length; k++) {
+                if (tabButtons[k].textContent.toLowerCase().indexOf(tabName === 'csv' ? 'csv' : tabName === 'manual' ? 'руч' : 'масс') !== -1) {
+                    tabButtons[k].className = 'tab active';
+                }
+            }
+        }
+
+        // ========================================
+        // DRAG & DROP
+        // ========================================
+
+        uploadZone.ondragover = function(e) { e.preventDefault(); uploadZone.className = 'upload-zone dragover'; };
+        uploadZone.ondragleave = function() { uploadZone.className = 'upload-zone'; };
+        uploadZone.ondrop = function(e) {
             e.preventDefault();
-            uploadZone.classList.remove('dragover');
+            uploadZone.className = 'upload-zone';
             handleFiles(e.dataTransfer.files);
-        });
+        };
+        uploadZone.onclick = function() { fileInput.click(); };
+        fileInput.onchange = function() { handleFiles(fileInput.files); };
 
-        uploadZone.addEventListener('click', function() {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', function(e) {
-            handleFiles(e.target.files);
-        });
+        // ========================================
+        // ОБРАБОТКА ФАЙЛОВ
+        // ========================================
 
         function cleanFileName(fileName) {
             var name = fileName.replace(/\.(csv|txt)$/i, '');
             name = name.replace(/_gtin.*$/i, '');
-            return name.trim();
+            return name.replace(/^\s+|\s+$/g, '');
         }
 
-        async function handleFiles(files) {
-            var fileArray = Array.from(files).filter(function(f) {
-                return f.name.toLowerCase().endsWith('.csv') || 
-                       f.name.toLowerCase().endsWith('.txt');
-            });
-
-            if (fileArray.length === 0) {
-                alert('Ошибка: Выберите CSV или TXT файлы!');
-                return;
+        function handleFiles(files) {
+            var fileArray = [];
+            for (var f = 0; f < files.length; f++) {
+                var fname = files[f].name.toLowerCase();
+                if (fname.indexOf('.csv') !== -1 || fname.indexOf('.txt') !== -1) {
+                    fileArray.push(files[f]);
+                }
             }
+
+            if (fileArray.length === 0) { showToast('Выберите CSV или TXT файлы', 'error'); return; }
 
             showLoading(true);
 
-            var totalLines = 0;
-            var processedLines = 0;
+            var fileIdx = 0;
+            var allLines = [];
 
-            for (var i = 0; i < fileArray.length; i++) {
-                var text = await fileArray[i].text();
-                var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
-                totalLines += lines.length;
-            }
-
-            for (var i = 0; i < fileArray.length; i++) {
-                var file = fileArray[i];
-                var fileName = file.name;
-                var productName = cleanFileName(fileName);
-
-                var text = await file.text();
-                var lines = text.split(/\r?\n/)
-                    .map(function(line) { return line.trim(); })
-                    .filter(function(line) { return line.length > 0; });
-
-                for (var j = 0; j < lines.length; j++) {
-                    processedLines++;
-                    updateProgress((processedLines / totalLines) * 100, 
-                        processedLines + '/' + totalLines + ': ' + productName);
-
-                    var qrData = await generateQRCode(lines[j]);
-                    
-                    allCodes.push({
-                        data: lines[j],
-                        name: productName,
-                        qrDataUrl: qrData,
-                        source: 'csv',
-                        fileName: fileName
-                    });
-
-                    if (j % 5 === 0) {
-                        await new Promise(function(resolve) { setTimeout(resolve, 10); });
-                    }
+            function readNext() {
+                if (fileIdx >= fileArray.length) {
+                    processAllLines();
+                    return;
                 }
 
-                addFileToList(fileName, lines.length);
+                var reader = new FileReader();
+                var currentFile = fileArray[fileIdx];
+                reader.onload = function(e) {
+                    var text = e.target.result;
+                    var productName = cleanFileName(currentFile.name);
+                    var lines = text.split(/\r?\n/);
+                    var cleaned = [];
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i].replace(/^\s+|\s+$/g, '');
+                        if (line.length > 0) cleaned.push({ data: line, name: productName, fileName: currentFile.name });
+                    }
+                    allLines = allLines.concat(cleaned);
+                    addFileToList(currentFile.name, cleaned.length);
+                    addToHistory('csv_import', { fileName: currentFile.name, name: productName, count: cleaned.length });
+                    fileIdx++;
+                    readNext();
+                };
+                reader.readAsText(currentFile);
             }
 
-            showLoading(false);
-            displayCodes();
-            updateStats();
-            fileInput.value = '';
+            function processAllLines() {
+                var idx = 0;
+                function genNext() {
+                    if (idx >= allLines.length) {
+                        showLoading(false);
+                        displayCodes();
+                        updateStats();
+                        fileInput.value = '';
+                        showToast('Загружено ' + allLines.length + ' кодов', 'success');
+                        return;
+                    }
+
+                    updateProgress(((idx + 1) / allLines.length) * 100, (idx + 1) + '/' + allLines.length + ': ' + allLines[idx].name);
+
+                    generateQRCode(allLines[idx].data, function(qrData) {
+                        allCodes.push({
+                            data: allLines[idx].data, name: allLines[idx].name,
+                            qrDataUrl: qrData, source: 'csv', fileName: allLines[idx].fileName
+                        });
+                        idx++;
+                        setTimeout(genNext, idx % 5 === 0 ? 10 : 0);
+                    });
+                }
+                genNext();
+            }
+
+            readNext();
         }
 
         function addFileToList(fileName, count) {
             var list = document.getElementById('filesList');
             var item = document.createElement('div');
             item.className = 'file-item';
-            item.innerHTML = '<span class="file-name">' + fileName + '</span>' +
+            item.innerHTML = '<span class="file-name">' + escapeHtml(fileName) + '</span>' +
                 '<span class="file-count">' + count + ' кодов</span>';
             list.appendChild(item);
         }
 
-        async function addManualCode() {
+        function addManualCode() {
             var codeInput = document.getElementById('manualCode');
             var nameInput = document.getElementById('manualName');
+            var code = codeInput.value.replace(/^\s+|\s+$/g, '');
+            var name = nameInput.value.replace(/^\s+|\s+$/g, '');
 
-            var code = codeInput.value.trim();
-            var name = nameInput.value.trim();
+            if (!code) { showToast('Введите криптокод', 'error'); codeInput.focus(); return; }
+            if (!name) { showToast('Введите название', 'error'); nameInput.focus(); return; }
 
-            if (!code) {
-                alert('Внимание: Введите криптокод!');
+            // ВАЛИДАЦИЯ
+            var validation = validateCodeString(code);
+            if (!validation.valid) {
+                showToast(validation.message, 'error', 5000);
                 codeInput.focus();
-                return;
-            }
-
-            if (!name) {
-                alert('Внимание: Введите название!');
-                nameInput.focus();
                 return;
             }
 
             showLoading(true);
             updateProgress(50, 'Генерация QR-кода...');
 
-            var qrData = await generateQRCode(code);
-
-            allCodes.push({
-                data: code,
-                name: name,
-                qrDataUrl: qrData,
-                source: 'manual'
+            generateQRCode(code, function(qrData) {
+                allCodes.push({ data: code, name: name, qrDataUrl: qrData, source: 'manual' });
+                addToHistory('manual_add', { name: name, count: 1 });
+                showLoading(false);
+                displayCodes();
+                updateStats();
+                codeInput.value = '';
+                nameInput.value = '';
+                codeInput.className = codeInput.className.replace(' invalid', '');
+                document.getElementById('manualCodeHint').className = 'hint';
+                document.getElementById('manualCodeHint').textContent = 'Цифры, знаки и латинские буквы. Кириллица запрещена.';
+                codeInput.focus();
+                showToast('QR-код добавлен', 'success');
             });
-
-            showLoading(false);
-            displayCodes();
-            updateStats();
-
-            codeInput.value = '';
-            codeInput.focus();
         }
 
-        async function addBulkCodes() {
+        function addBulkCodes() {
             var nameInput = document.getElementById('bulkName');
             var codesInput = document.getElementById('bulkCodes');
+            var name = nameInput.value.replace(/^\s+|\s+$/g, '');
+            var codesText = codesInput.value.replace(/^\s+|\s+$/g, '');
 
-            var name = nameInput.value.trim();
-            var codesText = codesInput.value.trim();
+            if (!name) { showToast('Введите название', 'error'); nameInput.focus(); return; }
+            if (!codesText) { showToast('Введите криптокоды', 'error'); codesInput.focus(); return; }
 
-            if (!name) {
-                alert('Внимание: Введите название!');
-                nameInput.focus();
-                return;
+            var rawLines = codesText.split(/\r?\n/);
+            var lines = [];
+            var badLines = [];
+            for (var i = 0; i < rawLines.length; i++) {
+                var line = rawLines[i].replace(/^\s+|\s+$/g, '');
+                if (line.length > 0) {
+                    // ВАЛИДАЦИЯ каждой строки
+                    if (hasCyrillic(line)) {
+                        badLines.push(i + 1);
+                    } else {
+                        lines.push(line);
+                    }
+                }
             }
 
-            if (!codesText) {
-                alert('Внимание: Введите криптокоды!');
+            if (badLines.length > 0) {
+                showToast('Кириллица в строках: ' + badLines.join(', ') + '. Исправьте!', 'error', 5000);
                 codesInput.focus();
                 return;
             }
 
-            var lines = codesText.split(/\r?\n/)
-                .map(function(l) { return l.trim(); })
-                .filter(function(l) { return l.length > 0; });
-
-            if (lines.length === 0) {
-                alert('Внимание: Не найдено ни одного кода!');
-                return;
-            }
+            if (lines.length === 0) { showToast('Не найдено кодов', 'error'); return; }
 
             showLoading(true);
 
-            for (var i = 0; i < lines.length; i++) {
-                updateProgress(((i + 1) / lines.length) * 100, 
-                    (i + 1) + '/' + lines.length + ': Генерация...');
+            var idx = 0;
+            function genNext() {
+                if (idx >= lines.length) {
+                    addToHistory('bulk_add', { name: name, count: lines.length });
+                    showLoading(false);
+                    displayCodes();
+                    updateStats();
+                    codesInput.value = '';
+                    codesInput.className = codesInput.className.replace(' invalid', '');
+                    document.getElementById('bulkCodesHint').className = 'hint';
+                    document.getElementById('bulkCodesHint').textContent = 'Цифры, знаки и латинские буквы. Кириллица запрещена.';
+                    showToast('Добавлено ' + lines.length + ' QR-кодов', 'success');
+                    return;
+                }
 
-                var qrData = await generateQRCode(lines[i]);
+                updateProgress(((idx + 1) / lines.length) * 100, (idx + 1) + '/' + lines.length + ': Генерация...');
 
-                allCodes.push({
-                    data: lines[i],
-                    name: name,
-                    qrDataUrl: qrData,
-                    source: 'bulk'
+                generateQRCode(lines[idx], function(qrData) {
+                    allCodes.push({ data: lines[idx], name: name, qrDataUrl: qrData, source: 'bulk' });
+                    idx++;
+                    setTimeout(genNext, idx % 5 === 0 ? 10 : 0);
+                });
+            }
+            genNext();
+        }
+
+        // ========================================
+        // QR ГЕНЕРАЦИЯ (callback вместо Promise для IE/Win7)
+        // ========================================
+
+        function generateQRCode(data, callback) {
+            var tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            document.body.appendChild(tempDiv);
+
+            try {
+                new QRCode(tempDiv, {
+                    text: data, width: 256, height: 256,
+                    colorDark: '#000000', colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
                 });
 
-                if (i % 5 === 0) {
-                    await new Promise(function(resolve) { setTimeout(resolve, 10); });
-                }
-            }
-
-            showLoading(false);
-            displayCodes();
-            updateStats();
-
-            codesInput.value = '';
-            
-            alert('Готово! Добавлено ' + lines.length + ' QR-кодов');
-        }
-
-        function generateQRCode(data) {
-            return new Promise(function(resolve) {
-                var tempDiv = document.createElement('div');
-                tempDiv.style.position = 'absolute';
-                tempDiv.style.left = '-9999px';
-                document.body.appendChild(tempDiv);
-
-                try {
-                    new QRCode(tempDiv, {
-                        text: data,
-                        width: 256,
-                        height: 256,
-                        colorDark: '#000000',
-                        colorLight: '#ffffff',
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
-
-                    setTimeout(function() {
-                        var canvas = tempDiv.querySelector('canvas');
-                        if (canvas) {
-                            resolve(canvas.toDataURL('image/png'));
-                        } else {
-                            var img = tempDiv.querySelector('img');
-                            resolve(img ? img.src : null);
-                        }
-                        document.body.removeChild(tempDiv);
-                    }, 50);
-
-                } catch (error) {
-                    console.error('Ошибка генерации QR:', error);
+                setTimeout(function() {
+                    var canvas = tempDiv.querySelector('canvas');
+                    var result = null;
+                    if (canvas) {
+                        result = canvas.toDataURL('image/png');
+                    } else {
+                        var img = tempDiv.querySelector('img');
+                        if (img) result = img.src;
+                    }
                     document.body.removeChild(tempDiv);
-                    resolve(null);
-                }
-            });
+                    callback(result);
+                }, 100);
+            } catch (error) {
+                document.body.removeChild(tempDiv);
+                callback(null);
+            }
         }
+
+        // ========================================
+        // ОТОБРАЖЕНИЕ
+        // ========================================
 
         function displayCodes() {
             var container = document.getElementById('codesSection');
             var emptyState = document.getElementById('emptyState');
-            
+
             container.style.display = 'block';
             codesGrid.innerHTML = '';
 
-            if (allCodes.length === 0) {
-                emptyState.style.display = 'block';
-                return;
-            }
-
+            if (allCodes.length === 0) { emptyState.style.display = 'block'; return; }
             emptyState.style.display = 'none';
 
             for (var index = 0; index < allCodes.length; index++) {
                 var code = allCodes[index];
-                
+
                 var codeItem = document.createElement('div');
-                codeItem.className = 'code-item';
-                if (selectedCodes.has(index)) {
-                    codeItem.classList.add('selected');
-                }
-                codeItem.dataset.index = index;
+                codeItem.className = 'code-item' + (selectedCodes[index] ? ' selected' : '');
+                codeItem.setAttribute('data-index', index);
 
                 (function(idx) {
-                    codeItem.addEventListener('click', function(e) {
-                        if (e.target.type !== 'checkbox' && !e.target.classList.contains('code-remove')) {
+                    codeItem.onclick = function(e) {
+                        var tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+                        var cls = e.target.className || '';
+                        if (tag !== 'input' && cls.indexOf('code-remove') === -1) {
                             toggleSelection(idx);
                         }
-                    });
+                    };
                 })(index);
 
-                // Чекбокс
                 var checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.className = 'code-checkbox';
-                checkbox.checked = selectedCodes.has(index);
+                checkbox.checked = !!selectedCodes[index];
                 (function(idx) {
-                    checkbox.addEventListener('change', function(e) {
-                        e.stopPropagation();
-                        toggleSelection(idx);
-                    });
+                    checkbox.onclick = function(e) { e.stopPropagation(); toggleSelection(idx); };
                 })(index);
                 codeItem.appendChild(checkbox);
 
-                // Кнопка удаления
                 var removeBtn = document.createElement('button');
                 removeBtn.className = 'code-remove';
                 removeBtn.innerHTML = 'X';
                 removeBtn.title = 'Удалить';
                 (function(idx) {
-                    removeBtn.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        removeCode(idx);
-                    });
+                    removeBtn.onclick = function(e) { e.stopPropagation(); removeCode(idx); };
                 })(index);
                 codeItem.appendChild(removeBtn);
 
-                // Номер
                 var codeNumber = document.createElement('div');
                 codeNumber.className = 'code-number';
-                codeNumber.textContent = '#' + (index + 1);
+                codeNumber.innerHTML = '#' + (index + 1);
                 codeItem.appendChild(codeNumber);
 
-                // QR-код
                 var qrWrapper = document.createElement('div');
                 qrWrapper.className = 'qr-wrapper';
-                
                 if (code.qrDataUrl) {
                     var img = document.createElement('img');
                     img.src = code.qrDataUrl;
                     qrWrapper.appendChild(img);
                 } else {
-                    qrWrapper.innerHTML = '<div style="color: red; padding: 20px;">Ошибка</div>';
+                    qrWrapper.innerHTML = '<div style="color:red;padding:20px;">Ошибка</div>';
                 }
                 codeItem.appendChild(qrWrapper);
 
-                // Название
                 var codeName = document.createElement('div');
                 codeName.className = 'code-name';
-                codeName.textContent = code.name;
+                codeName.innerHTML = escapeHtml(code.name);
                 codeName.title = code.name;
                 codeItem.appendChild(codeName);
 
-                // Данные
                 var codeData = document.createElement('div');
                 codeData.className = 'code-data';
-                codeData.textContent = code.data.length > 30 ? code.data.slice(0, 30) + '...' : code.data;
+                codeData.innerHTML = escapeHtml(code.data.length > 30 ? code.data.substring(0, 30) + '...' : code.data);
                 codeData.title = code.data;
                 codeItem.appendChild(codeData);
 
-                // Источник
-                var sourceLabels = { csv: 'CSV', manual: 'Вручную', bulk: 'Массовый' };
+                var sourceLabels = { csv: 'CSV', manual: 'Вручную', bulk: 'Массовый', json: 'JSON' };
                 var codeSource = document.createElement('div');
                 codeSource.className = 'code-source';
-                codeSource.textContent = '[' + (sourceLabels[code.source] || code.source) + ']';
+                codeSource.innerHTML = '[' + (sourceLabels[code.source] || code.source) + ']';
                 codeItem.appendChild(codeSource);
 
                 codesGrid.appendChild(codeItem);
             }
 
-            document.getElementById('codesCountBadge').textContent = allCodes.length;
+            document.getElementById('codesCountBadge').innerHTML = allCodes.length;
         }
 
         function removeCode(index) {
             allCodes.splice(index, 1);
-            
-            var newSelected = new Set();
-            selectedCodes.forEach(function(i) {
-                if (i < index) newSelected.add(i);
-                else if (i > index) newSelected.add(i - 1);
-            });
+            var newSelected = {};
+            var newCount = 0;
+            for (var key in selectedCodes) {
+                if (selectedCodes.hasOwnProperty(key)) {
+                    var k = parseInt(key, 10);
+                    if (k < index) { newSelected[k] = true; newCount++; }
+                    else if (k > index) { newSelected[k - 1] = true; newCount++; }
+                }
+            }
             selectedCodes = newSelected;
-
+            selectedCount = newCount;
             displayCodes();
             updateStats();
         }
 
         function toggleSelection(index) {
-            if (selectedCodes.has(index)) {
-                selectedCodes.delete(index);
+            if (selectedCodes[index]) {
+                delete selectedCodes[index];
+                selectedCount--;
             } else {
-                selectedCodes.add(index);
+                selectedCodes[index] = true;
+                selectedCount++;
             }
-            
-            var codeItem = document.querySelector('.code-item[data-index="' + index + '"]');
-            var checkbox = codeItem.querySelector('.code-checkbox');
-            
-            if (selectedCodes.has(index)) {
-                codeItem.classList.add('selected');
-            } else {
-                codeItem.classList.remove('selected');
+
+            var items = codesGrid.childNodes;
+            if (items[index]) {
+                var item = items[index];
+                if (selectedCodes[index]) {
+                    item.className = 'code-item selected';
+                } else {
+                    item.className = 'code-item';
+                }
+                var cb = item.querySelector('.code-checkbox');
+                if (cb) cb.checked = !!selectedCodes[index];
             }
-            checkbox.checked = selectedCodes.has(index);
-            
             updateStats();
         }
 
         function selectAll() {
+            selectedCodes = {};
+            selectedCount = 0;
             for (var i = 0; i < allCodes.length; i++) {
-                selectedCodes.add(i);
+                selectedCodes[i] = true;
+                selectedCount++;
             }
-            var items = document.querySelectorAll('.code-item');
+            var items = codesGrid.childNodes;
             for (var j = 0; j < items.length; j++) {
-                items[j].classList.add('selected');
-                items[j].querySelector('.code-checkbox').checked = true;
+                items[j].className = 'code-item selected';
+                var cb = items[j].querySelector('.code-checkbox');
+                if (cb) cb.checked = true;
             }
             updateStats();
         }
 
         function deselectAll() {
-            selectedCodes.clear();
-            var items = document.querySelectorAll('.code-item');
+            selectedCodes = {};
+            selectedCount = 0;
+            var items = codesGrid.childNodes;
             for (var j = 0; j < items.length; j++) {
-                items[j].classList.remove('selected');
-                items[j].querySelector('.code-checkbox').checked = false;
+                items[j].className = 'code-item';
+                var cb = items[j].querySelector('.code-checkbox');
+                if (cb) cb.checked = false;
             }
             updateStats();
         }
 
         function updateStats() {
-            document.getElementById('totalCount').textContent = allCodes.length;
-            document.getElementById('selectedCount').textContent = selectedCodes.size;
-            document.getElementById('selectedCountInline').textContent = selectedCodes.size;
-            document.getElementById('exportBtn').disabled = selectedCodes.size === 0;
+            document.getElementById('totalCount').innerHTML = allCodes.length;
+            document.getElementById('selectedCount').innerHTML = selectedCount;
+            document.getElementById('selectedCountInline').innerHTML = selectedCount;
+            document.getElementById('exportBtn').disabled = selectedCount === 0;
+            document.getElementById('exportWordBtn').disabled = selectedCount === 0;
         }
 
         function showLoading(show) {
-            if (show) {
-                document.getElementById('loading').classList.add('active');
-                document.getElementById('progress').classList.add('active');
-            } else {
-                document.getElementById('loading').classList.remove('active');
-                document.getElementById('progress').classList.remove('active');
-            }
+            document.getElementById('loading').className = show ? 'loading active' : 'loading';
+            document.getElementById('progress').className = show ? 'progress active' : 'progress';
         }
 
         function updateProgress(percent, text) {
-            var progressBar = document.getElementById('progressBar');
-            progressBar.style.width = percent + '%';
-            progressBar.textContent = Math.round(percent) + '%';
-            document.getElementById('loadingText').textContent = text;
+            var bar = document.getElementById('progressBar');
+            bar.style.width = percent + '%';
+            bar.innerHTML = Math.round(percent) + '%';
+            document.getElementById('loadingText').innerHTML = text;
         }
 
         // ========================================
@@ -1114,153 +1525,109 @@
         function createTextImage(text, maxWidthMM, fontSizePt) {
             var canvas = document.createElement('canvas');
             var ctx = canvas.getContext('2d');
-            
             var scale = 10;
             var maxWidthPx = maxWidthMM * scale;
             var fontSizePx = fontSizePt * scale / 3;
-            
+
             ctx.font = fontSizePx + 'px Arial, sans-serif';
-            
+
             var words = text.split(/[\s\-_]+/);
             var lines = [];
             var currentLine = '';
-            
+
             for (var i = 0; i < words.length; i++) {
-                var word = words[i];
-                var testLine = currentLine ? currentLine + ' ' + word : word;
-                var metrics = ctx.measureText(testLine);
-                
-                if (metrics.width > maxWidthPx && currentLine) {
+                var testLine = currentLine ? currentLine + ' ' + words[i] : words[i];
+                if (ctx.measureText(testLine).width > maxWidthPx && currentLine) {
                     lines.push(currentLine);
-                    currentLine = word;
+                    currentLine = words[i];
                 } else {
                     currentLine = testLine;
                 }
             }
             if (currentLine) lines.push(currentLine);
-            
-            var maxLines = 2;
-            if (lines.length > maxLines) {
-                lines.length = maxLines;
-                var lastLine = lines[maxLines - 1];
-                while (ctx.measureText(lastLine + '...').width > maxWidthPx && lastLine.length > 3) {
-                    lastLine = lastLine.slice(0, -1);
-                }
-                lines[maxLines - 1] = lastLine + '...';
+
+            if (lines.length > 2) {
+                lines.length = 2;
+                var last = lines[1];
+                while (ctx.measureText(last + '...').width > maxWidthPx && last.length > 3) last = last.substring(0, last.length - 1);
+                lines[1] = last + '...';
             }
-            
+
             var lineHeight = fontSizePx * 1.3;
-            var canvasWidth = maxWidthPx;
-            var canvasHeight = lines.length * lineHeight + fontSizePx * 0.3;
-            
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
-            
+            canvas.width = maxWidthPx;
+            canvas.height = lines.length * lineHeight + fontSizePx * 0.3;
+
             ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-            
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.font = fontSizePx + 'px Arial, sans-serif';
             ctx.fillStyle = 'black';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            
+
             for (var j = 0; j < lines.length; j++) {
-                ctx.fillText(lines[j], canvasWidth / 2, j * lineHeight);
+                ctx.fillText(lines[j], canvas.width / 2, j * lineHeight);
             }
-            
-            return {
-                dataUrl: canvas.toDataURL('image/png'),
-                width: canvasWidth / scale,
-                height: canvasHeight / scale
-            };
+
+            return { dataUrl: canvas.toDataURL('image/png'), width: canvas.width / scale, height: canvas.height / scale };
         }
 
-        async function exportToPDF() {
-            if (selectedCodes.size === 0) {
-                alert('Внимание: Выберите хотя бы один QR-код!\n\nКликните на коды или нажмите "Выбрать все"');
-                return;
+        function getSelectedData() {
+            var arr = [];
+            for (var key in selectedCodes) {
+                if (selectedCodes.hasOwnProperty(key)) {
+                    arr.push(parseInt(key, 10));
+                }
             }
+            arr.sort(function(a, b) { return a - b; });
+            var data = [];
+            for (var i = 0; i < arr.length; i++) {
+                data.push(allCodes[arr[i]]);
+            }
+            return data;
+        }
+
+        function exportToPDF() {
+            if (selectedCount === 0) { showToast('Выберите хотя бы один QR-код', 'error'); return; }
 
             var exportBtn = document.getElementById('exportBtn');
-            exportBtn.textContent = 'Создание...';
+            exportBtn.innerHTML = 'Создание...';
             exportBtn.disabled = true;
 
             try {
                 var jsPDF = window.jspdf.jsPDF;
-                
-                var pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
+                var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-                var LABEL_WIDTH = 60;
-                var LABEL_HEIGHT = 40;
-                var COLS = 3;
-                var ROWS = 6;
-                
-                var PAGE_WIDTH = 210;
-                var PAGE_HEIGHT = 297;
-                var startX = (PAGE_WIDTH - COLS * LABEL_WIDTH) / 2;
-                var startY = (PAGE_HEIGHT - ROWS * LABEL_HEIGHT) / 2;
+                var LW = 60, LH = 40, COLS = 3, ROWS = 6;
+                var startX = (210 - COLS * LW) / 2;
+                var startY = (297 - ROWS * LH) / 2;
+                var PAD = 2, TH = 5;
+                var QS = Math.min(LW - PAD * 2, LH - PAD * 2 - TH - 1);
 
-                var PADDING = 2;
-                var TEXT_HEIGHT = 5;
-                var GAP = 1;
-                
-                var qrAreaWidth = LABEL_WIDTH - PADDING * 2;
-                var qrAreaHeight = LABEL_HEIGHT - PADDING * 2 - TEXT_HEIGHT - GAP;
-                var QR_SIZE = Math.min(qrAreaWidth, qrAreaHeight);
+                var selectedData = getSelectedData();
+                var ci = 0, pn = 0;
 
-                var selectedArray = Array.from(selectedCodes).sort(function(a, b) { return a - b; });
-                var selectedData = selectedArray.map(function(index) { return allCodes[index]; });
+                while (ci < selectedData.length) {
+                    if (pn > 0) pdf.addPage();
+                    pn++;
 
-                var currentIndex = 0;
-                var pageNum = 0;
+                    for (var r = 0; r < ROWS && ci < selectedData.length; r++) {
+                        for (var c = 0; c < COLS && ci < selectedData.length; c++) {
+                            var code = selectedData[ci];
+                            var lx = startX + c * LW, ly = startY + r * LH;
 
-                while (currentIndex < selectedData.length) {
-                    if (pageNum > 0) pdf.addPage();
-                    pageNum++;
-
-                    for (var row = 0; row < ROWS && currentIndex < selectedData.length; row++) {
-                        for (var col = 0; col < COLS && currentIndex < selectedData.length; col++) {
-                            var code = selectedData[currentIndex];
-
-                            var labelX = startX + col * LABEL_WIDTH;
-                            var labelY = startY + row * LABEL_HEIGHT;
-
-                            // Рамка
-                            pdf.setDrawColor(180, 180, 180);
-                            pdf.setLineWidth(0.2);
+                            pdf.setDrawColor(180); pdf.setLineWidth(0.2);
                             pdf.setLineDashPattern([2, 2], 0);
-                            pdf.rect(labelX, labelY, LABEL_WIDTH, LABEL_HEIGHT);
+                            pdf.rect(lx, ly, LW, LH);
                             pdf.setLineDashPattern([], 0);
 
-                            // QR-код
-                            var qrX = labelX + (LABEL_WIDTH - QR_SIZE) / 2;
-                            var qrY = labelY + PADDING;
-
                             if (code.qrDataUrl) {
-                                try {
-                                    pdf.addImage(code.qrDataUrl, 'PNG', qrX, qrY, QR_SIZE, QR_SIZE);
-                                } catch (e) {
-                                    console.warn('Ошибка QR:', e);
-                                }
+                                try { pdf.addImage(code.qrDataUrl, 'PNG', lx + (LW - QS) / 2, ly + PAD, QS, QS); } catch (e) {}
                             }
 
-                            // Текст
-                            var textImg = createTextImage(code.name, LABEL_WIDTH - PADDING * 2, 8);
-                            var textY = labelY + LABEL_HEIGHT - PADDING - TEXT_HEIGHT;
+                            var ti = createTextImage(code.name, LW - PAD * 2, 8);
+                            try { pdf.addImage(ti.dataUrl, 'PNG', lx + PAD, ly + LH - PAD - TH, LW - PAD * 2, TH); } catch (e) {}
 
-                            try {
-                                pdf.addImage(textImg.dataUrl, 'PNG', 
-                                    labelX + PADDING, textY, 
-                                    LABEL_WIDTH - PADDING * 2, TEXT_HEIGHT);
-                            } catch (e) {
-                                console.warn('Ошибка текста:', e);
-                            }
-
-                            currentIndex++;
+                            ci++;
                         }
                     }
                 }
@@ -1270,36 +1637,277 @@
                 pdf.save('QR_Etiketki_' + date + '_' + time + '.pdf');
 
                 var totalPages = Math.ceil(selectedData.length / (COLS * ROWS));
-                alert('Готово! PDF создан\n\n' +
-                    'Кодов: ' + selectedData.length + '\n' +
-                    'Страниц: ' + totalPages + '\n' +
-                    'Этикетка: ' + LABEL_WIDTH + 'x' + LABEL_HEIGHT + ' мм');
-
+                addToHistory('export_pdf', { count: selectedData.length, pages: totalPages });
+                showToast('PDF создан: ' + selectedData.length + ' кодов, ' + totalPages + ' стр.', 'success');
             } catch (error) {
-                console.error('Ошибка PDF:', error);
-                alert('Ошибка создания PDF!\n\n' + error.message);
-            } finally {
-                exportBtn.textContent = 'Экспорт в PDF';
-                exportBtn.disabled = selectedCodes.size === 0;
+                showToast('Ошибка PDF: ' + error.message, 'error');
+            }
+
+            exportBtn.innerHTML = 'PDF';
+            exportBtn.disabled = selectedCount === 0;
+        }
+
+        // ========================================
+        // ЭКСПОРТ В WORD (совместимо с Win7!)
+        // ========================================
+
+        function dataUrlToBase64(dataUrl) {
+            return dataUrl.split(',')[1];
+        }
+
+        function exportToWord() {
+            if (selectedCount === 0) { showToast('Выберите хотя бы один QR-код', 'error'); return; }
+
+            var exportWordBtn = document.getElementById('exportWordBtn');
+            exportWordBtn.innerHTML = 'Создание...';
+            exportWordBtn.disabled = true;
+
+            // Проверяем доступность docx
+            var docxAvailable = false;
+            try {
+                if (typeof docx !== 'undefined' && docx.Document && docx.Packer) {
+                    docxAvailable = true;
+                }
+            } catch (e) {}
+
+            if (docxAvailable) {
+                exportToWordDocx();
+            } else {
+                // Fallback: генерируем Word через HTML
+                exportToWordHtml();
             }
         }
 
+        function exportToWordDocx() {
+            var exportWordBtn = document.getElementById('exportWordBtn');
+
+            try {
+                var selectedData = getSelectedData();
+                var COLS = 3;
+                var QR_PX = 150;
+                var CELL_W = 3000;
+
+                var rows = [];
+                for (var i = 0; i < selectedData.length; i += COLS) {
+                    rows.push(selectedData.slice(i, i + COLS));
+                }
+
+                var tableRows = [];
+                var dashBorder = { style: docx.BorderStyle.DASHED, size: 1, color: "BBBBBB" };
+                var noBorder = { style: docx.BorderStyle.NONE, size: 0, color: "FFFFFF" };
+
+                for (var r = 0; r < rows.length; r++) {
+                    var rowData = rows[r];
+                    var qrCells = [];
+                    var nameCells = [];
+
+                    for (var c = 0; c < COLS; c++) {
+                        if (c < rowData.length && rowData[c].qrDataUrl) {
+                            var code = rowData[c];
+                            var base64 = dataUrlToBase64(code.qrDataUrl);
+
+                            qrCells.push(new docx.TableCell({
+                                width: { size: CELL_W, type: docx.WidthType.DXA },
+                                margins: { top: 100, bottom: 50, left: 100, right: 100 },
+                                verticalAlign: docx.VerticalAlign.CENTER,
+                                borders: { top: dashBorder, bottom: noBorder, left: dashBorder, right: dashBorder },
+                                children: [
+                                    new docx.Paragraph({
+                                        alignment: docx.AlignmentType.CENTER,
+                                        children: [
+                                            new docx.ImageRun({
+                                                data: Uint8Array.from(atob(base64), function(ch) { return ch.charCodeAt(0); }),
+                                                transformation: { width: QR_PX, height: QR_PX }
+                                            })
+                                        ]
+                                    })
+                                ]
+                            }));
+
+                            nameCells.push(new docx.TableCell({
+                                width: { size: CELL_W, type: docx.WidthType.DXA },
+                                margins: { top: 0, bottom: 100, left: 100, right: 100 },
+                                verticalAlign: docx.VerticalAlign.TOP,
+                                borders: { top: noBorder, bottom: dashBorder, left: dashBorder, right: dashBorder },
+                                children: [
+                                    new docx.Paragraph({
+                                        alignment: docx.AlignmentType.CENTER,
+                                        children: [
+                                            new docx.TextRun({ text: code.name, size: 18, font: 'Arial' })
+                                        ]
+                                    })
+                                ]
+                            }));
+                        } else {
+                            var emptyBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+                            qrCells.push(new docx.TableCell({
+                                width: { size: CELL_W, type: docx.WidthType.DXA },
+                                borders: emptyBorders,
+                                children: [new docx.Paragraph("")]
+                            }));
+                            nameCells.push(new docx.TableCell({
+                                width: { size: CELL_W, type: docx.WidthType.DXA },
+                                borders: emptyBorders,
+                                children: [new docx.Paragraph("")]
+                            }));
+                        }
+                    }
+
+                    tableRows.push(new docx.TableRow({ children: qrCells }));
+                    tableRows.push(new docx.TableRow({ children: nameCells }));
+                }
+
+                var table = new docx.Table({
+                    rows: tableRows,
+                    width: { size: CELL_W * COLS, type: docx.WidthType.DXA },
+                    alignment: docx.AlignmentType.CENTER,
+                    layout: docx.TableLayoutType.FIXED
+                });
+
+                var doc = new docx.Document({
+                    sections: [{
+                        properties: {
+                            page: { margin: { top: 500, bottom: 500, left: 700, right: 700 } }
+                        },
+                        children: [table]
+                    }]
+                });
+
+                docx.Packer.toBlob(doc).then(function(blob) {
+                    var date = new Date().toISOString().slice(0, 10);
+                    var time = new Date().toTimeString().slice(0, 5).replace(':', '-');
+                    saveAs(blob, 'QR_Etiketki_' + date + '_' + time + '.docx');
+
+                    addToHistory('export_word', { count: selectedData.length, method: 'docx' });
+                    showToast('Word создан: ' + selectedData.length + ' кодов. Можно редактировать!', 'success', 5000);
+
+                    exportWordBtn.innerHTML = 'Word';
+                    exportWordBtn.disabled = selectedCount === 0;
+                }).catch(function(err) {
+                    console.error('docx.Packer error:', err);
+                    // Fallback
+                    exportToWordHtml();
+                });
+
+            } catch (error) {
+                console.error('docx error:', error);
+                // Fallback
+                exportToWordHtml();
+            }
+        }
+
+        // FALLBACK: Word через HTML (работает на ЛЮБОМ браузере, включая Win7 IE11)
+        function exportToWordHtml() {
+            var exportWordBtn = document.getElementById('exportWordBtn');
+
+            try {
+                var selectedData = getSelectedData();
+                var COLS = 3;
+
+                var html = '<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+                    'xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+                    '<head><meta charset="UTF-8">' +
+                    '<style>' +
+                    '@page { size: A4 portrait; margin: 10mm; }' +
+                    'body { font-family: Arial, sans-serif; }' +
+                    'table { border-collapse: collapse; width: 100%; margin: 0 auto; }' +
+                    'td { text-align: center; vertical-align: middle; padding: 5px; }' +
+                    'td.qr-cell { border: 1px dashed #bbb; border-bottom: none; padding: 10px 5px 5px 5px; }' +
+                    'td.name-cell { border: 1px dashed #bbb; border-top: none; padding: 2px 5px 10px 5px; font-size: 10pt; }' +
+                    'td.empty-cell { border: none; }' +
+                    'img { width: 150px; height: 150px; }' +
+                    '</style></head><body>';
+
+                html += '<table>';
+
+                for (var i = 0; i < selectedData.length; i += COLS) {
+                    // QR row
+                    html += '<tr>';
+                    for (var c = 0; c < COLS; c++) {
+                        var idx = i + c;
+                        if (idx < selectedData.length && selectedData[idx].qrDataUrl) {
+                            html += '<td class="qr-cell"><img src="' + selectedData[idx].qrDataUrl + '"></td>';
+                        } else {
+                            html += '<td class="empty-cell"></td>';
+                        }
+                    }
+                    html += '</tr>';
+
+                    // Name row
+                    html += '<tr>';
+                    for (var c2 = 0; c2 < COLS; c2++) {
+                        var idx2 = i + c2;
+                        if (idx2 < selectedData.length) {
+                            html += '<td class="name-cell">' + escapeHtml(selectedData[idx2].name) + '</td>';
+                        } else {
+                            html += '<td class="empty-cell"></td>';
+                        }
+                    }
+                    html += '</tr>';
+                }
+
+                html += '</table></body></html>';
+
+                var blob = new Blob([html], { type: 'application/msword' });
+                var date = new Date().toISOString().slice(0, 10);
+                var time = new Date().toTimeString().slice(0, 5).replace(':', '-');
+
+                // Для старых браузеров
+                if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                    window.navigator.msSaveOrOpenBlob(blob, 'QR_Etiketki_' + date + '_' + time + '.doc');
+                } else {
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'QR_Etiketki_' + date + '_' + time + '.doc';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+                }
+
+                addToHistory('export_word', { count: selectedData.length, method: 'html' });
+                showToast('Word создан (формат .doc): ' + selectedData.length + ' кодов', 'success', 5000);
+
+            } catch (error) {
+                showToast('Ошибка Word: ' + error.message, 'error');
+            }
+
+            exportWordBtn.innerHTML = 'Word';
+            exportWordBtn.disabled = selectedCount === 0;
+        }
+
+        // ========================================
+        // ОЧИСТКА
+        // ========================================
+
         function clearAll() {
             if (allCodes.length > 0 && !confirm('Удалить все QR-коды?')) return;
-            
+
+            addToHistory('clear_all', { count: allCodes.length });
+
             allCodes = [];
-            selectedCodes.clear();
-            
+            selectedCodes = {};
+            selectedCount = 0;
             codesGrid.innerHTML = '';
             document.getElementById('filesList').innerHTML = '';
             document.getElementById('emptyState').style.display = 'block';
-            
             document.getElementById('manualCode').value = '';
             document.getElementById('manualName').value = '';
             document.getElementById('bulkCodes').value = '';
             document.getElementById('bulkName').value = '';
-            
             updateStats();
+            showToast('Все коды удалены', 'info');
+        }
+
+        // Закрытие модалок по клику на оверлей
+        var overlays = document.querySelectorAll('.modal-overlay');
+        for (var oi = 0; oi < overlays.length; oi++) {
+            (function(overlay) {
+                overlay.onclick = function(e) {
+                    if (e.target === overlay) overlay.className = 'modal-overlay';
+                };
+            })(overlays[oi]);
         }
 
         // Инициализация

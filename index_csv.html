@@ -572,7 +572,6 @@
         // ВАЛИДАЦИЯ КРИПТОКОДОВ
         // ========================================
 
-        // Проверка: разрешены цифры, латинские буквы, знаки. Кириллица ЗАПРЕЩЕНА.
         function hasCyrillic(text) {
             return /[а-яА-ЯёЁ]/.test(text);
         }
@@ -582,7 +581,6 @@
                 return { valid: false, message: 'Код не может быть пустым' };
             }
             if (hasCyrillic(code)) {
-                // Найдём конкретные кириллические символы
                 var cyrChars = code.match(/[а-яА-ЯёЁ]/g);
                 var unique = [];
                 for (var i = 0; i < cyrChars.length; i++) {
@@ -964,7 +962,6 @@
             var jsonStr = JSON.stringify(data, null, 2);
 
             if (window.clipboardData) {
-                // IE
                 window.clipboardData.setData('Text', jsonStr);
                 showToast('JSON скопирован', 'success');
             } else if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1008,7 +1005,6 @@
             updateStats();
             displayCodes();
 
-            // Обновляем превью JSON
             var data = buildFullJSON();
             document.getElementById('jsonPreview').textContent = JSON.stringify(data, null, 2);
 
@@ -1100,7 +1096,6 @@
             for (var j = 0; j < contents.length; j++) contents[j].className = 'tab-content';
             document.getElementById('tab-' + tabName).className = 'tab-content active';
 
-            // Активируем правильную вкладку
             var tabButtons = document.querySelectorAll('.tab');
             for (var k = 0; k < tabButtons.length; k++) {
                 if (tabButtons[k].textContent.toLowerCase().indexOf(tabName === 'csv' ? 'csv' : tabName === 'manual' ? 'руч' : 'масс') !== -1) {
@@ -1222,7 +1217,6 @@
             if (!code) { showToast('Введите криптокод', 'error'); codeInput.focus(); return; }
             if (!name) { showToast('Введите название', 'error'); nameInput.focus(); return; }
 
-            // ВАЛИДАЦИЯ
             var validation = validateCodeString(code);
             if (!validation.valid) {
                 showToast(validation.message, 'error', 5000);
@@ -1264,7 +1258,6 @@
             for (var i = 0; i < rawLines.length; i++) {
                 var line = rawLines[i].replace(/^\s+|\s+$/g, '');
                 if (line.length > 0) {
-                    // ВАЛИДАЦИЯ каждой строки
                     if (hasCyrillic(line)) {
                         badLines.push(i + 1);
                     } else {
@@ -1310,7 +1303,7 @@
         }
 
         // ========================================
-        // QR ГЕНЕРАЦИЯ (callback вместо Promise для IE/Win7)
+        // QR ГЕНЕРАЦИЯ
         // ========================================
 
         function generateQRCode(data, callback) {
@@ -1651,7 +1644,7 @@
         }
 
         // ========================================
-        // ЭКСПОРТ В WORD (совместимо с Win7!)
+        // ЭКСПОРТ В WORD — 4 КОЛОНКИ
         // ========================================
 
         function dataUrlToBase64(dataUrl) {
@@ -1665,7 +1658,6 @@
             exportWordBtn.innerHTML = 'Создание...';
             exportWordBtn.disabled = true;
 
-            // Проверяем доступность docx
             var docxAvailable = false;
             try {
                 if (typeof docx !== 'undefined' && docx.Document && docx.Packer) {
@@ -1676,7 +1668,6 @@
             if (docxAvailable) {
                 exportToWordDocx();
             } else {
-                // Fallback: генерируем Word через HTML
                 exportToWordHtml();
             }
         }
@@ -1686,9 +1677,14 @@
 
             try {
                 var selectedData = getSelectedData();
-                var COLS = 3;
-                var QR_PX = 150;
-                var CELL_W = 3000;
+
+                // 4 колонки
+                // A4 portrait: usable width ~189mm с полями по 10mm = 10800 twips (1 inch = 1440 twips, 210mm = 11906 twips)
+                // Поля страницы 700 twips (~12.5mm) с каждой стороны → usable = 11906 - 1400 = 10506 twips
+                // Делим на 4: ~2626 twips на колонку
+                var COLS = 4;
+                var QR_PX = 110;       // чуть меньше QR чтобы влезало в 4 колонки
+                var CELL_W = 2250;     // ширина ячейки в twips (4 × 2250 = 9000, плюс поля страницы ~700×2 ≈ 10400 — умещается)
 
                 var rows = [];
                 for (var i = 0; i < selectedData.length; i += COLS) {
@@ -1711,7 +1707,7 @@
 
                             qrCells.push(new docx.TableCell({
                                 width: { size: CELL_W, type: docx.WidthType.DXA },
-                                margins: { top: 100, bottom: 50, left: 100, right: 100 },
+                                margins: { top: 80, bottom: 40, left: 80, right: 80 },
                                 verticalAlign: docx.VerticalAlign.CENTER,
                                 borders: { top: dashBorder, bottom: noBorder, left: dashBorder, right: dashBorder },
                                 children: [
@@ -1729,14 +1725,14 @@
 
                             nameCells.push(new docx.TableCell({
                                 width: { size: CELL_W, type: docx.WidthType.DXA },
-                                margins: { top: 0, bottom: 100, left: 100, right: 100 },
+                                margins: { top: 0, bottom: 80, left: 80, right: 80 },
                                 verticalAlign: docx.VerticalAlign.TOP,
                                 borders: { top: noBorder, bottom: dashBorder, left: dashBorder, right: dashBorder },
                                 children: [
                                     new docx.Paragraph({
                                         alignment: docx.AlignmentType.CENTER,
                                         children: [
-                                            new docx.TextRun({ text: code.name, size: 18, font: 'Arial' })
+                                            new docx.TextRun({ text: code.name, size: 16, font: 'Arial' })
                                         ]
                                     })
                                 ]
@@ -1770,7 +1766,10 @@
                 var doc = new docx.Document({
                     sections: [{
                         properties: {
-                            page: { margin: { top: 500, bottom: 500, left: 700, right: 700 } }
+                            page: {
+                                // Уменьшаем поля чтобы 4 колонки уместились
+                                margin: { top: 400, bottom: 400, left: 500, right: 500 }
+                            }
                         },
                         children: [table]
                     }]
@@ -1782,43 +1781,41 @@
                     saveAs(blob, 'QR_Etiketki_' + date + '_' + time + '.docx');
 
                     addToHistory('export_word', { count: selectedData.length, method: 'docx' });
-                    showToast('Word создан: ' + selectedData.length + ' кодов. Можно редактировать!', 'success', 5000);
+                    showToast('Word создан: ' + selectedData.length + ' кодов, 4 в ряд!', 'success', 5000);
 
                     exportWordBtn.innerHTML = 'Word';
                     exportWordBtn.disabled = selectedCount === 0;
                 }).catch(function(err) {
                     console.error('docx.Packer error:', err);
-                    // Fallback
                     exportToWordHtml();
                 });
 
             } catch (error) {
                 console.error('docx error:', error);
-                // Fallback
                 exportToWordHtml();
             }
         }
 
-        // FALLBACK: Word через HTML (работает на ЛЮБОМ браузере, включая Win7 IE11)
+        // FALLBACK: Word через HTML — 4 колонки
         function exportToWordHtml() {
             var exportWordBtn = document.getElementById('exportWordBtn');
 
             try {
                 var selectedData = getSelectedData();
-                var COLS = 3;
+                var COLS = 4;
 
                 var html = '<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
                     'xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
                     '<head><meta charset="UTF-8">' +
                     '<style>' +
-                    '@page { size: A4 portrait; margin: 10mm; }' +
+                    '@page { size: A4 portrait; margin: 8mm; }' +
                     'body { font-family: Arial, sans-serif; }' +
-                    'table { border-collapse: collapse; width: 100%; margin: 0 auto; }' +
-                    'td { text-align: center; vertical-align: middle; padding: 5px; }' +
-                    'td.qr-cell { border: 1px dashed #bbb; border-bottom: none; padding: 10px 5px 5px 5px; }' +
-                    'td.name-cell { border: 1px dashed #bbb; border-top: none; padding: 2px 5px 10px 5px; font-size: 10pt; }' +
+                    'table { border-collapse: collapse; width: 100%; margin: 0 auto; table-layout: fixed; }' +
+                    'td { text-align: center; vertical-align: middle; padding: 3px; width: 25%; }' +
+                    'td.qr-cell { border: 1px dashed #bbb; border-bottom: none; padding: 6px 3px 3px 3px; }' +
+                    'td.name-cell { border: 1px dashed #bbb; border-top: none; padding: 2px 3px 6px 3px; font-size: 8pt; }' +
                     'td.empty-cell { border: none; }' +
-                    'img { width: 150px; height: 150px; }' +
+                    'img { width: 110px; height: 110px; }' +
                     '</style></head><body>';
 
                 html += '<table>';
@@ -1855,7 +1852,6 @@
                 var date = new Date().toISOString().slice(0, 10);
                 var time = new Date().toTimeString().slice(0, 5).replace(':', '-');
 
-                // Для старых браузеров
                 if (window.navigator && window.navigator.msSaveOrOpenBlob) {
                     window.navigator.msSaveOrOpenBlob(blob, 'QR_Etiketki_' + date + '_' + time + '.doc');
                 } else {
@@ -1870,7 +1866,7 @@
                 }
 
                 addToHistory('export_word', { count: selectedData.length, method: 'html' });
-                showToast('Word создан (формат .doc): ' + selectedData.length + ' кодов', 'success', 5000);
+                showToast('Word создан (формат .doc): ' + selectedData.length + ' кодов, 4 в ряд', 'success', 5000);
 
             } catch (error) {
                 showToast('Ошибка Word: ' + error.message, 'error');
